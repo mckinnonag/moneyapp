@@ -21,7 +21,7 @@ func generateSessionToken() string {
 func ShowRegistrationPage(c *gin.Context) {
 	// Call the render function with the name of the template to render
 	common.Render(c, gin.H{
-		"title": "Register"}, "register.html")
+		"title": "Register", "is_logged_in": c.MustGet("is_logged_in").(bool)}, "register.html")
 }
 
 func Register(c *gin.Context) {
@@ -36,21 +36,21 @@ func Register(c *gin.Context) {
 		c.Set("is_logged_in", true)
 
 		common.Render(c, gin.H{
-			"title": "Successful registration & Login"}, "login-successful.html")
+			"title": "Successful registration & Login", "is_logged_in": c.MustGet("is_logged_in").(bool)}, "login-successful.html")
 
 	} else {
 		// If the username/password combination is invalid,
 		// show the error message on the login page
 		c.HTML(http.StatusBadRequest, "register.html", gin.H{
 			"ErrorTitle":   "Registration Failed",
-			"ErrorMessage": err.Error()})
+			"ErrorMessage": err.Error(), "is_logged_in": c.MustGet("is_logged_in").(bool)})
 
 	}
 }
 
 func ShowLoginPage(c *gin.Context) {
 	common.Render(c, gin.H{
-		"title": "Login",
+		"title": "Login", "is_logged_in": c.MustGet("is_logged_in").(bool),
 	}, "login.html")
 }
 
@@ -63,7 +63,7 @@ func PerformLogin(c *gin.Context) {
 		c.SetCookie("token", token, 3600, "", "", false, true)
 
 		common.Render(c, gin.H{
-			"title": "Successful Login"}, "login-successful.html")
+			"title": "Successful Login", "is_logged_in": c.MustGet("is_logged_in").(bool)}, "login-successful.html")
 
 	} else {
 		c.HTML(http.StatusBadRequest, "login.html", gin.H{

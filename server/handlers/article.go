@@ -18,8 +18,9 @@ func ShowIndexPage(c *gin.Context) {
 		"index.html",
 		// Pass the data that the page uses
 		gin.H{
-			"title":   "Home Page",
-			"payload": articles,
+			"title":        "Home Page",
+			"is_logged_in": c.MustGet("is_logged_in").(bool),
+			"payload":      articles,
 		},
 	)
 
