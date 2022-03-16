@@ -6,6 +6,7 @@ import (
 
 	api "server/api"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -87,6 +88,17 @@ func main() {
 
 	// Load templates
 	r.LoadHTMLGlob(TEMPLATE_PATH)
+
+	corsConfig := cors.Default()
+	// corsConfig.AllowOrigins = []string{"https://example.com"}
+	// To be able to send tokens to the server.
+	// corsConfig.AllowCredentials = true
+
+	// OPTIONS method for ReactJS
+	// corsConfig.AddAllowMethods("OPTIONS")
+
+	// Register the middleware
+	r.Use(corsConfig)
 
 	api.InitRoutes(r)
 
