@@ -14,9 +14,10 @@ func InitRoutes(r *gin.Engine) {
 	r.GET("/login", handlers.ReactLogin)
 	r.POST("/login", handlers.ReactPerformLogin)
 
-	plaidRoutes := r.Group("/plaid")
+	api := r.Group("/api")
 	{
-		plaidRoutes.POST("/create", handlers.CreateLinkToken)
+		api.POST("/linktoken", handlers.CreateLinkToken)
+		api.POST("/accesstoken", handlers.CreateAccessToken)
 	}
 
 	userRoutes := r.Group("/u")

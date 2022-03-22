@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	common "server/common"
 	"strings"
@@ -10,6 +11,16 @@ import (
 	"github.com/gin-gonic/gin"
 	plaid "github.com/plaid/plaid-go/plaid"
 )
+
+// We store the access_token in memory - in production, store it in a secure
+// persistent data store.
+var accessToken string
+var itemID string
+
+// The transfer_id is only relevant for the Transfer ACH product.
+// We store the transfer_id in memory - in production, store it in a secure
+// persistent data store
+var transferID string
 
 func renderError(c *gin.Context, originalErr error) {
 	if plaidError, err := plaid.ToPlaidError(originalErr); err == nil {
@@ -79,6 +90,35 @@ func linkTokenCreate(
 	return linkTokenCreateResp.GetLinkToken(), nil
 }
 
+func getAccessToken(c *gin.Context, publicToken string) {
+	// publicToken := c.PostForm("public_token")
+	ctx := context.Background()
+
+	// exchange the public_token for an access_token
+	exchangePublicTokenResp, _, err := common.PlaidClient.PlaidApi.ItemPublicTokenExchange(ctx).ItemPublicTokenExchangeRequest(
+		*plaid.NewItemPublicTokenExchangeRequest(publicToken),
+	).Execute()
+	if err != nil {
+		renderError(c, err)
+		return
+	}
+
+	accessToken = exchangePublicTokenResp.GetAccessToken()
+	itemID = exchangePublicTokenResp.GetItemId()
+	// if itemExists(strings.Split(common.PLAID_PRODUCTS, ","), "transfer") {
+	// 	transferID, err = authorizeAndCreateTransfer(ctx, common.PlaidClient, accessToken)
+	// }
+
+	fmt.Println("public token: " + publicToken)
+	fmt.Println("access token: " + accessToken)
+	fmt.Println("item ID: " + itemID)
+
+	c.JSON(http.StatusOK, gin.H{
+		"access_token": accessToken,
+		"item_id":      itemID,
+	})
+}
+
 func CreateLinkToken(c *gin.Context) {
 	linkToken, err := linkTokenCreate(nil)
 	if err != nil {
@@ -87,3 +127,28 @@ func CreateLinkToken(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"link_token": linkToken})
 }
+
+func CreateAccessToken(c *gin.Context) {
+	type TOKEN struct {
+		Token string `json:"token" binding: "required"`
+	}
+	var token TOKEN
+	err := c.BindJSON(&token)
+	if err != nil {
+		renderError(c, err)
+	}
+
+	getAccessToken(c, token.Token)
+	c.JSON(http.StatusOK, nil)
+}
+
+// Helper function to determine if Transfer is in Plaid product array
+// func itemExists(array []string, product string) bool {
+// 	for _, item := range array {
+// 		if item == product {
+// 			return true
+// 		}
+// 	}
+
+// 	return false
+// }
