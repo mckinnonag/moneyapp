@@ -20,7 +20,7 @@ function App() {
       <BrowserRouter>
         <ResponsiveAppBar />
         <Routes>
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/" element={<Dashboard />} />
           <Route path="/preferences" element={<Preferences />} />
           <Route path="/accounts" element={<Accounts />} />
         </Routes>

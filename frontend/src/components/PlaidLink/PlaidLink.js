@@ -13,7 +13,7 @@ const PlaidLink = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title: 'React POST Request Example' })
         }
-        const response = await fetch('http://localhost:8080/plaid/create', requestOptions);
+        const response = await fetch('http://localhost:8080/api/linktoken', requestOptions);
         const { link_token } = await response.json();
       setToken(link_token);
     };
@@ -24,6 +24,13 @@ const PlaidLink = () => {
     // send public_token to your server
     // https://plaid.com/docs/api/tokens/#token-exchange-flow
     console.log(publicToken, metadata);
+    const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: publicToken })
+    }
+    const response = fetch('http://localhost:8080/api/accesstoken', requestOptions);
+    console.log(response);
   }, []);
 
 //   const { open, ready } = usePlaidLink({
