@@ -7,37 +7,28 @@ import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
-import { Container } from "@mui/material";
-import { styled } from '@mui/material/styles';
 
-const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
-  ...theme.typography.body2,
-  padding: theme.spacing(1),
-  textAlign: 'center',
-  color: theme.palette.text.secondary,
-}));
-
-const bankAccounts = [{
-  "type": "Checking",
-  "name": "Bank of America",
-  "balance": 450,
+const friendAccounts = [{
+  "name": "Tiana",
+  "owed": 275,
 },
 {
-  "type": "Savings",
-  "name": "Chase",
-  "balance": 275,
+  "name": "Alex",
+  "owed": -450,
 },]
 
-const cardsList = bankAccounts.map(function(acct, index){
-  return  <Card key={ index } sx={{ 
-                                    minWidth: 275,
+const cardsList = friendAccounts.map(function(acct, index){
+    var bal = '';
+    if (acct.owed >= 0) {
+        bal = `${acct.name} owes you $${acct.owed}`
+    } else {
+        bal = `You owe ${acct.name} $${acct.owed * -1}`;
+    }
+    return <Card key={ index } sx={{ minWidth: 275,
                                     width: 500,
                                     margin: "auto",
                                     "margin-top": 20,
-                                  }}>
+                                    }}>
             <CardContent>
               <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
                   placeholder
@@ -46,23 +37,22 @@ const cardsList = bankAccounts.map(function(acct, index){
                   {acct.name}
               </Typography>
               <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                  ${acct.balance}
+                  placeholder
               </Typography>
               <Typography variant="body2">
-                  {acct.type}
+                  { bal }
               </Typography>
             </CardContent>
             <CardActions>
-              <Button size="small">Remove</Button>
+              <Button size="small">Remove Friend  </Button>
             </CardActions>
           </Card>
-})
+  })
 
 export default function Accounts() {
     return(
       <div>
-          { cardsList }
-          <PlaidLink /> 
+        { cardsList }
       </div>
     );
   }

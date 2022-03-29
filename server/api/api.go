@@ -11,8 +11,8 @@ func InitRoutes(r *gin.Engine) {
 	r.Use(auth.SetUserStatus())
 
 	r.GET("/", handlers.ShowIndexPage)
-	r.GET("/login", handlers.ReactLogin)
-	r.POST("/login", handlers.ReactPerformLogin)
+	// r.GET("/login", handlers.Login)
+	r.POST("/login", handlers.PerformLogin)
 
 	api := r.Group("/api")
 	{
@@ -20,13 +20,12 @@ func InitRoutes(r *gin.Engine) {
 		api.POST("/accesstoken", handlers.CreateAccessToken)
 	}
 
-	userRoutes := r.Group("/u")
-	{
-		userRoutes.GET("/register", auth.EnsureNotLoggedIn(), handlers.ShowRegistrationPage)
-		userRoutes.POST("/register", auth.EnsureNotLoggedIn(), handlers.Register)
-		userRoutes.GET("/login", auth.EnsureNotLoggedIn(), handlers.ShowLoginPage)
-		userRoutes.POST("/login", auth.EnsureNotLoggedIn(), handlers.PerformLogin)
-		userRoutes.GET("/logout", auth.EnsureLoggedIn(), handlers.Logout)
-	}
-
+	// userRoutes := r.Group("/u")
+	// {
+	// 	userRoutes.GET("/register", auth.EnsureNotLoggedIn(), handlers.ShowRegistrationPage)
+	// 	userRoutes.POST("/register", auth.EnsureNotLoggedIn(), handlers.Register)
+	// 	userRoutes.GET("/login", auth.EnsureNotLoggedIn(), handlers.ShowLoginPage)
+	// 	userRoutes.POST("/login", auth.EnsureNotLoggedIn(), handlers.PerformLogin)
+	// 	userRoutes.GET("/logout", auth.EnsureLoggedIn(), handlers.Logout)
+	// }
 }

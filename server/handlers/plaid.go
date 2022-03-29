@@ -142,6 +142,13 @@ func CreateAccessToken(c *gin.Context) {
 	c.JSON(http.StatusOK, nil)
 }
 
+func GetTransactions(c *gin.Context) {
+	if accessToken == "" {
+		return
+	}
+
+}
+
 // Helper function to determine if Transfer is in Plaid product array
 // func itemExists(array []string, product string) bool {
 // 	for _, item := range array {

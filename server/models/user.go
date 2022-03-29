@@ -3,6 +3,8 @@ package models
 import (
 	"errors"
 	"strings"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type user struct {
@@ -23,7 +25,12 @@ func RegisterNewUser(username, password string) (*user, error) {
 		return nil, errors.New("the username isn't available")
 	}
 
-	u := user{Username: username, Password: password}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 8)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	u := user{Username: username, Password: string(hashedPassword)}
 
 	userList = append(userList, u)
 
@@ -41,7 +48,10 @@ func isUsernameAvailable(username string) bool {
 
 func IsUserValid(username, password string) bool {
 	for _, u := range userList {
-		if u.Username == username && u.Password == password {
+		// if u.Username == username && u.Password == password {
+		// 	return true
+		// }
+		if u.Username == username && bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)) == nil {
 			return true
 		}
 	}

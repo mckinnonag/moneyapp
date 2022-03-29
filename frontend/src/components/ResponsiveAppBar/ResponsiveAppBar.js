@@ -13,7 +13,7 @@ import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 
-const pages = ['Transactions', 'Accounts', 'Connections'];
+const pages = ['Dashboard', 'Transactions', 'Accounts', 'Friends'];
 const settings = ['Account', 'Preferences', 'Dashboard', 'Logout'];
 
 const ResponsiveAppBar = () => {
