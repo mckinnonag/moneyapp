@@ -1,92 +1,130 @@
 package handlers
 
 import (
-	"io/ioutil"
+	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	common "server/common"
-	"strconv"
-	"strings"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
-func getLoginPOSTPayload() string {
-	params := url.Values{}
-	params.Add("username", "user1")
-	params.Add("password", "pass1")
+func TestLogin(t *testing.T) {
+	u := LoginPayload{
+		User:     "user1@user.com",
+		Password: "pass1",
+	}
 
-	return params.Encode()
-}
+	payload, err := json.Marshal(&u)
+	assert.NoError(t, err)
 
-func getRegistrationPOSTPayload() string {
-	params := url.Values{}
-	params.Add("username", "u1")
-	params.Add("password", "p1")
+	req, err := http.NewRequest("POST", "/api/public/login", bytes.NewBuffer(payload))
+	assert.NoError(t, err)
 
-	return params.Encode()
-}
-
-func TestShowRegistrationPageUnauthenticated(t *testing.T) {
-	r := common.GetRouter(true)
-
-	r.GET("/u/register", ShowRegistrationPage)
-
-	req, _ := http.NewRequest("GET", "/u/register", nil)
-
-	common.TestHTTPResponse(t, r, req, func(w *httptest.ResponseRecorder) bool {
-		statusOK := w.Code == http.StatusOK
-
-		p, err := ioutil.ReadAll(w.Body)
-		pageOK := err == nil && strings.Index(string(p), "<title>Register</title>") > 0
-
-		return statusOK && pageOK
-	})
-}
-
-func TestRegisterUnauthenticatedUnavailableUsername(t *testing.T) {
-	common.SaveLists()
 	w := httptest.NewRecorder()
 
-	r := common.GetRouter(true)
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
 
-	r.POST("/u/register", Register)
+	Login(c)
 
-	registrationPayload := getLoginPOSTPayload()
-	req, _ := http.NewRequest("POST", "/u/register", strings.NewReader(registrationPayload))
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Content-Length", strconv.Itoa(len(registrationPayload)))
-
-	r.ServeHTTP(w, req)
-
-	if w.Code != http.StatusBadRequest {
-		t.Fail()
-	}
-	common.RestoreLists()
+	assert.Equal(t, 200, w.Code)
 }
 
-func TestRegisterUnauthenticated(t *testing.T) {
-	common.SaveLists()
+func TestRegister(t *testing.T) {
+	u := LoginPayload{
+		User:     "user1@example.com",
+		Password: "pass1",
+	}
+
+	payload, err := json.Marshal(&u)
+	assert.NoError(t, err)
+
+	req, err := http.NewRequest("POST", "/api/public/register", bytes.NewBuffer(payload))
+	assert.NoError(t, err)
+
 	w := httptest.NewRecorder()
 
-	r := common.GetRouter(true)
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
 
-	r.POST("/u/register", register)
+	Register(c)
 
-	registrationPayload := getRegistrationPOSTPayload()
-	req, _ := http.NewRequest("POST", "/u/register", strings.NewReader(registrationPayload))
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Content-Length", strconv.Itoa(len(registrationPayload)))
+	assert.Equal(t, 200, w.Code)
+}
 
-	r.ServeHTTP(w, req)
+func TestRegisterBadJSON(t *testing.T) {
+	user := "test"
 
-	if w.Code != http.StatusOK {
-		t.Fail()
+	payload, err := json.Marshal(&user)
+	assert.NoError(t, err)
+
+	request, err := http.NewRequest("POST", "/api/public/register", bytes.NewBuffer(payload))
+	assert.NoError(t, err)
+
+	w := httptest.NewRecorder()
+
+	c, _ := gin.CreateTestContext(w)
+	c.Request = request
+
+	Register(c)
+
+	assert.Equal(t, 400, w.Code)
+}
+
+func TestRegisterTakenUser(t *testing.T) {
+	u1 := LoginPayload{
+		User:     "user3@example.com",
+		Password: "pass3",
+	}
+	u2 := LoginPayload{
+		User:     "user3@example.com",
+		Password: "pass3",
 	}
 
-	p, err := ioutil.ReadAll(w.Body)
-	if err != nil || strings.Index(string(p), "<title>Successful registration &amp; Login</title>") < 0 {
-		t.Fail()
+	payload1, err := json.Marshal(&u1)
+	assert.NoError(t, err)
+	payload2, err := json.Marshal(&u2)
+	assert.NoError(t, err)
+
+	req1, err := http.NewRequest("POST", "/api/public/register", bytes.NewBuffer(payload1))
+	assert.NoError(t, err)
+	req2, err := http.NewRequest("POST", "api/public/register", bytes.NewBuffer(payload2))
+	assert.NoError(t, err)
+
+	w1 := httptest.NewRecorder()
+	c1, _ := gin.CreateTestContext(w1)
+	c1.Request = req1
+	w2 := httptest.NewRecorder()
+	c2, _ := gin.CreateTestContext(w2)
+	c2.Request = req2
+
+	Register(c1)
+	assert.Equal(t, 200, w1.Code)
+	Register(c2)
+	assert.Equal(t, 400, w2.Code)
+}
+
+func TestLoginInvalidCredentials(t *testing.T) {
+	user := LoginPayload{
+		User:     "jwt@email.com",
+		Password: "invalid",
 	}
-	common.RestoreLists()
+
+	payload, err := json.Marshal(&user)
+	assert.NoError(t, err)
+
+	request, err := http.NewRequest("POST", "/api/public/login", bytes.NewBuffer(payload))
+	assert.NoError(t, err)
+
+	w := httptest.NewRecorder()
+
+	c, _ := gin.CreateTestContext(w)
+	c.Request = request
+
+	Login(c)
+
+	assert.Equal(t, 401, w.Code)
 }

@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
-
 import { usePlaidLink, PlaidLinkOnSuccess } from 'react-plaid-link';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
 
 const PlaidLink = () => {
   const [token, setToken] = useState(null);
@@ -10,15 +11,15 @@ const PlaidLink = () => {
     const createLinkToken = async () => {
         const requestOptions = {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ title: 'React POST Request Example' })
         }
-        const response = await fetch('http://localhost:8080/api/linktoken', requestOptions);
+        const response = await fetch('http://localhost:8080/api/private/linktoken', requestOptions);
         const { link_token } = await response.json();
       setToken(link_token);
     };
     createLinkToken();
-  }, []);
+  }, [token]);
 
   const onSuccess = useCallback((publicToken, metadata) => {
     // send public_token to your server
@@ -26,12 +27,12 @@ const PlaidLink = () => {
     console.log(publicToken, metadata);
     const requestOptions = {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ token: publicToken })
     }
-    const response = fetch('http://localhost:8080/api/accesstoken', requestOptions);
+    const response = fetch('http://localhost:8080/api/private/accesstoken', requestOptions);
     console.log(response);
-  }, []);
+  }, [token]);
 
 //   const { open, ready } = usePlaidLink({
 //     token,
@@ -62,9 +63,20 @@ const PlaidLink = () => {
     //   }, [ready, open, isOauth]);
 
     return (
-        <button onClick={() => open()} disabled={!ready}>
-        Connect a bank account
-        </button>
+      <div align="center">
+        <Box 
+          sx={{
+            mx: "auto",
+            m: 1,
+          }}
+          >
+          <Button 
+            variant="outlined"
+            onClick={() => open()} disabled={!ready}>
+            Connect a bank account
+          </Button>
+        </Box>
+      </div>
     );
 };
 

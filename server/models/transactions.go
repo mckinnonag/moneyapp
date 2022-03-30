@@ -16,6 +16,6 @@ var Transactions = []Transaction{
 	{Amount: 126.00, Category: "Bills", Date: time.Now()},
 }
 
-func GetAllTransactions() []Transaction {
+func GetAllTransactions(email string) []Transaction {
 	return Transactions
 }

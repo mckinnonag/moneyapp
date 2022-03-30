@@ -18,7 +18,7 @@ const friendAccounts = [{
 },]
 
 const cardsList = friendAccounts.map(function(acct, index){
-    var bal = '';
+    let bal = '';
     if (acct.owed >= 0) {
         bal = `${acct.name} owes you $${acct.owed}`
     } else {

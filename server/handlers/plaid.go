@@ -22,6 +22,9 @@ var itemID string
 // persistent data store
 var transferID string
 
+// Temporary testing bucket for access tokens
+var accessTokens map[string]string
+
 func renderError(c *gin.Context, originalErr error) {
 	if plaidError, err := plaid.ToPlaidError(originalErr); err == nil {
 		// Return 200 and allow the front end to render the error.
@@ -92,6 +95,7 @@ func linkTokenCreate(
 
 func getAccessToken(c *gin.Context, publicToken string) {
 	// publicToken := c.PostForm("public_token")
+	email, _ := c.Get("email")
 	ctx := context.Background()
 
 	// exchange the public_token for an access_token
@@ -112,6 +116,7 @@ func getAccessToken(c *gin.Context, publicToken string) {
 	fmt.Println("public token: " + publicToken)
 	fmt.Println("access token: " + accessToken)
 	fmt.Println("item ID: " + itemID)
+	accessTokens[email.(string)] = accessToken
 
 	c.JSON(http.StatusOK, gin.H{
 		"access_token": accessToken,

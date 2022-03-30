@@ -7,18 +7,23 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type user struct {
+func testHash(pass string) []byte {
+	result, _ := bcrypt.GenerateFromPassword([]byte("pass1"), 8)
+	return result
+}
+
+type User struct {
 	Username string `json:"username"`
 	Password string `json:"-"`
 }
 
-var userList = []user{
-	{Username: "user1", Password: "pass1"},
-	{Username: "user2", Password: "pass2"},
-	{Username: "user3", Password: "pass3"},
+var userList = []User{
+	{Username: "user1@user.com", Password: string(testHash("pass1"))},
+	{Username: "user1@user.com", Password: string(testHash("pass2"))},
+	{Username: "user1@user.com", Password: string(testHash("pass3"))},
 }
 
-func RegisterNewUser(username, password string) (*user, error) {
+func RegisterNewUser(username, password string) (*User, error) {
 	if strings.TrimSpace(password) == "" {
 		return nil, errors.New("the password can't be empty")
 	} else if !isUsernameAvailable(username) {
@@ -30,7 +35,7 @@ func RegisterNewUser(username, password string) (*user, error) {
 		return nil, errors.New(err.Error())
 	}
 
-	u := user{Username: username, Password: string(hashedPassword)}
+	u := User{Username: username, Password: string(hashedPassword)}
 
 	userList = append(userList, u)
 
@@ -48,9 +53,6 @@ func isUsernameAvailable(username string) bool {
 
 func IsUserValid(username, password string) bool {
 	for _, u := range userList {
-		// if u.Username == username && u.Password == password {
-		// 	return true
-		// }
 		if u.Username == username && bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)) == nil {
 			return true
 		}

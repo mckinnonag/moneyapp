@@ -2,77 +2,44 @@ package handlers
 
 import (
 	"encoding/json"
-	common "server/common"
+	"log"
+	"server/auth"
+	"server/common"
 	models "server/models"
-
-	"math/rand"
-	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-func generateSessionToken() string {
-	// We're using a random 16 character string as the session token
-	// This is NOT a secure way of generating session tokens
-	// DO NOT USE THIS IN PRODUCTION
-	return strconv.FormatInt(rand.Int63(), 16)
+type LoginPayload struct {
+	User     string `json:"username"` //binding:"required"`
+	Password string `json:"password"` //binding:"required"`
 }
 
 func Register(c *gin.Context) {
-	// Obtain the POSTed username and password values
-	username := c.PostForm("username")
-	password := c.PostForm("password")
-
-	if _, err := models.RegisterNewUser(username, password); err == nil {
-		// If the user is created, set the token in a cookie and log the user in
-		token := generateSessionToken()
-		c.SetCookie("token", token, 3600, "", "", false, true)
-		c.Set("is_logged_in", true)
-
-		common.Render(c, gin.H{
-			"title": "Successful registration & Login", "is_logged_in": c.MustGet("is_logged_in").(bool)}, "login-successful.html")
-
-	} else {
-		// If the username/password combination is invalid,
-		// show the error message on the login page
-		c.HTML(http.StatusBadRequest, "register.html", gin.H{
-			"ErrorTitle":   "Registration Failed",
-			"ErrorMessage": err.Error(), "is_logged_in": c.MustGet("is_logged_in").(bool)})
-
-	}
-}
-
-func Logout(c *gin.Context) {
-	c.SetCookie("token", "", -1, "", "", false, true)
-
-	c.Redirect(http.StatusTemporaryRedirect, "/")
-}
-
-// func Login(c *gin.Context) {
-// 	data := []byte(`{"token":"test123"}`)
-// 	c.Data(
-// 		http.StatusOK,
-// 		"application/json",
-// 		data,
-// 	)
-// }
-
-func PerformLogin(c *gin.Context) {
-	type LOGIN struct {
-		User     string `json:"username"` //binding:"required"`
-		Password string `json:"password"` //binding:"required"`
-	}
-
-	var credentials LOGIN
-	err := c.BindJSON(&credentials)
+	var creds LoginPayload
+	err := c.BindJSON(&creds)
 	if err != nil {
-		panic(err)
+		log.Println(err)
+		c.JSON(500, gin.H{
+			"msg": "invalid json",
+		})
 	}
 
-	var token string
-	if models.IsUserValid(credentials.User, credentials.Password) {
-		token = generateSessionToken()
+	if _, err := models.RegisterNewUser(creds.User, creds.Password); err == nil {
+		j := auth.JwtConfig{
+			SecretKey:  common.JWT_SECRET,
+			Issuer:     common.JWT_ISSUER,
+			Expiration: int64(common.JWT_EXPIRY),
+		}
+
+		token, err := j.GenerateToken(creds.User)
+		if err != nil {
+			log.Println(err)
+			c.JSON(500, gin.H{
+				"msg": "error generating token",
+			})
+		}
+
 		type s struct {
 			Token string `json:"token"`
 		}
@@ -80,8 +47,59 @@ func PerformLogin(c *gin.Context) {
 			Token: token,
 		}
 		data, _ := json.Marshal(obj)
-		c.Data(http.StatusOK, "application/json", data)
+		c.Data(200, "application/json", data)
+
 	} else {
-		c.Data(http.StatusForbidden, "application/json", nil)
+		type errMsg struct {
+			Message error
+		}
+		obj := errMsg{
+			Message: err,
+		}
+		data, _ := json.Marshal(&obj)
+		c.JSON(400, data)
 	}
+}
+
+func Login(c *gin.Context) {
+	var creds LoginPayload
+	err := c.BindJSON(&creds)
+	if err != nil {
+		log.Println(err)
+		c.JSON(500, gin.H{
+			"msg": "invalid json",
+		})
+	}
+
+	if models.IsUserValid(creds.User, creds.Password) {
+		j := auth.JwtConfig{
+			SecretKey:  common.JWT_SECRET,
+			Issuer:     common.JWT_ISSUER,
+			Expiration: int64(common.JWT_EXPIRY),
+		}
+
+		token, err := j.GenerateToken(creds.User)
+		if err != nil {
+			log.Println(err)
+			c.JSON(500, gin.H{
+				"msg": "error generating token",
+			})
+		}
+
+		type s struct {
+			Token string `json:"token"`
+		}
+		obj := &s{
+			Token: token,
+		}
+		data, _ := json.Marshal(obj)
+		c.Data(200, "application/json", data)
+	} else {
+		c.Data(401, "application/json", nil)
+	}
+}
+
+func Profile(c *gin.Context) {
+	// email, _ := c.Get("email")
+	panic("not implemented")
 }
