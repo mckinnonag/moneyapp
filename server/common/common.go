@@ -11,18 +11,18 @@ import (
 )
 
 var (
-	PLAID_CLIENT_ID     = ""
-	PLAID_SECRET        = ""
-	PLAID_ENV           = ""
-	PLAID_PRODUCTS      = ""
-	PLAID_COUNTRY_CODES = ""
-	PLAID_REDIRECT_URI  = ""
-	APP_PORT            = ""
-	// TEMPLATE_PATH       = ""
-	JWT_SECRET  = ""
-	JWT_ISSUER  = ""
-	JWT_EXPIRY  int64
-	PlaidClient *plaid.APIClient = nil
+	PLAID_CLIENT_ID                      = ""
+	PLAID_SECRET                         = ""
+	PLAID_ENV                            = ""
+	PLAID_PRODUCTS                       = ""
+	PLAID_COUNTRY_CODES                  = ""
+	PLAID_REDIRECT_URI                   = ""
+	APP_PORT                             = ""
+	JWT_SECRET                           = ""
+	JWT_ISSUER                           = ""
+	DATABASE_URL                         = ""
+	PlaidClient         *plaid.APIClient = nil
+	JWT_EXPIRY          int64
 )
 
 var environments = map[string]plaid.Environment{
@@ -37,13 +37,24 @@ func Init() {
 		fmt.Println("Error when loading environment variables from .env file %w", err)
 	}
 
+	DATABASE_URL = os.Getenv("DATABASE_URL")
+	if DATABASE_URL == "" {
+		DATABASE_URL = "sqlite:///"
+	}
+
 	JWT_SECRET = os.Getenv("JWT_SECRET")
 	JWT_ISSUER = os.Getenv("JWT_ISSUER")
-	exp, err := strconv.ParseInt(os.Getenv("JWT_EXPIRY"), 10, 64)
-	if err != nil {
-		log.Println(err)
-	}
+	exp, _ := strconv.ParseInt(os.Getenv("JWT_EXPIRY"), 10, 64)
 	JWT_EXPIRY = exp
+	if JWT_SECRET == "" {
+		JWT_SECRET = "verysecretkey"
+	}
+	if JWT_ISSUER == "" {
+		JWT_ISSUER = "Issuer"
+	}
+	if JWT_EXPIRY == 0 {
+		JWT_EXPIRY = 1
+	}
 
 	PLAID_CLIENT_ID = os.Getenv("PLAID_CLIENT_ID")
 	PLAID_SECRET = os.Getenv("PLAID_SECRET")
@@ -58,9 +69,6 @@ func Init() {
 	PLAID_REDIRECT_URI = os.Getenv("PLAID_REDIRECT_URI")
 	APP_PORT = os.Getenv("APP_PORT")
 
-	// if TEMPLATE_PATH == "" {
-	// 	TEMPLATE_PATH = "/Users/alexmckinnon/moneytest/templates/*"
-	// }
 	if PLAID_PRODUCTS == "" {
 		PLAID_PRODUCTS = "transactions"
 	}
@@ -87,18 +95,3 @@ func Init() {
 	configuration.UseEnvironment(environments[PLAID_ENV])
 	PlaidClient = plaid.NewAPIClient(configuration)
 }
-
-// func Render(c *gin.Context, data gin.H, templateName string) {
-// 	switch c.Request.Header.Get("Accept") {
-// 	case "application/json":
-// 		// Respond with JSON
-// 		c.JSON(http.StatusOK, data["payload"])
-// 	case "application/xml":
-// 		// Respond with XML
-// 		c.XML(http.StatusOK, data["payload"])
-// 	default:
-// 		// Respond with HTML
-// 		c.HTML(http.StatusOK, templateName, data)
-// 	}
-
-// }

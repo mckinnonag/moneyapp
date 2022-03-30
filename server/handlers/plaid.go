@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	common "server/common"
 	"strings"
@@ -24,6 +25,15 @@ var transferID string
 
 // Temporary testing bucket for access tokens
 var accessTokens map[string]string
+
+type accountInfo struct {
+	AccountId        string
+	BalanceAvailable float32
+	Name             string
+	OfficialName     string
+	Subtype          plaid.NullableAccountSubtype
+	Type             string
+}
 
 func renderError(c *gin.Context, originalErr error) {
 	if plaidError, err := plaid.ToPlaidError(originalErr); err == nil {
@@ -116,6 +126,10 @@ func getAccessToken(c *gin.Context, publicToken string) {
 	fmt.Println("public token: " + publicToken)
 	fmt.Println("access token: " + accessToken)
 	fmt.Println("item ID: " + itemID)
+
+	if accessTokens == nil {
+		accessTokens = make(map[string]string)
+	}
 	accessTokens[email.(string)] = accessToken
 
 	c.JSON(http.StatusOK, gin.H{
@@ -130,7 +144,7 @@ func CreateLinkToken(c *gin.Context) {
 		renderError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"link_token": linkToken})
+	c.JSON(200, gin.H{"link_token": linkToken})
 }
 
 func CreateAccessToken(c *gin.Context) {
@@ -164,3 +178,63 @@ func GetTransactions(c *gin.Context) {
 
 // 	return false
 // }
+
+// type GetAccountsPayload struct {
+// 	Email string `json:"email"`
+// }
+
+func GetAccounts(c *gin.Context) {
+	// Call the Plaid API to get a list of accounts
+	ctx := context.Background()
+	email, exists := c.Get("email")
+	if !exists {
+		log.Println("email doesn't exist")
+	}
+	accessToken = accessTokens[email.(string)]
+	accessToken = "access-sandbox-410dea3e-79b1-4c2a-8935-1164190fc552"
+	fmt.Println(accessToken)
+	accountsGetRequest := plaid.NewAccountsGetRequest(accessToken)
+	// accountsGetRequest.SetOptions(plaid.AccountsGetRequestOptions{
+	// 	AccountIds: &[]string{},
+	// })
+	accountsGetResp, _, _ := common.PlaidClient.PlaidApi.AccountsGet(ctx).AccountsGetRequest(
+		*accountsGetRequest,
+	).Execute()
+	response := accountsGetResp.GetAccounts()
+
+	var accts []accountInfo
+	for _, a := range response {
+		accountId := a.AccountId
+		var balanceAvailable float32
+		if a.Balances.Available.Get() != nil {
+			balanceAvailable = *a.Balances.Available.Get()
+		}
+
+		var officialName string
+
+		if a.OfficialName.Get() != nil {
+			officialName = *a.OfficialName.Get()
+		}
+
+		acct := accountInfo{
+			AccountId:        accountId,
+			BalanceAvailable: balanceAvailable,
+			Name:             a.Name,
+			OfficialName:     officialName,
+			// Subtype:          *a.Subtype.Get(),
+			// Type:             *a.Type.Get(),
+		}
+		accts = append(accts, acct)
+	}
+
+	// fmt.Println(accts)
+
+	// body, err := json.Marshal(accts[0])
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	c.JSON(200, gin.H{
+		"accounts": accts,
+	})
+}

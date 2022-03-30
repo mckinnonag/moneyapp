@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"server/auth"
+	"server/common"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -27,12 +28,12 @@ func Authz() gin.HandlerFunc {
 			return
 		}
 
-		jwtWrapper := auth.JwtConfig{
-			SecretKey: "verysecretkey",
-			Issuer:    "AuthService",
+		jwtConfig := auth.JwtConfig{
+			SecretKey: common.JWT_SECRET,
+			Issuer:    common.JWT_ISSUER,
 		}
 
-		claims, err := jwtWrapper.ValidateToken(clientToken)
+		claims, err := jwtConfig.ValidateToken(clientToken)
 		if err != nil {
 			c.JSON(401, err.Error())
 			c.Abort()

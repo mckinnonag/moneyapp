@@ -6,33 +6,33 @@ import Box from '@mui/material/Box';
 const PlaidLink = () => {
   const [token, setToken] = useState(null);
 
-  // get link_token from your server when component mounts
+  // get link_token from server when component mounts
   React.useEffect(() => {
     const createLinkToken = async () => {
+        const jwtToken = JSON.parse(sessionStorage.getItem('token'))['token'];
         const requestOptions = {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ title: 'React POST Request Example' })
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` },
+            body: JSON.stringify({ title: 'Placeholder' })
         }
         const response = await fetch('http://localhost:8080/api/private/linktoken', requestOptions);
         const { link_token } = await response.json();
       setToken(link_token);
     };
     createLinkToken();
-  }, [token]);
+  }, []);
 
   const onSuccess = useCallback((publicToken, metadata) => {
-    // send public_token to your server
-    // https://plaid.com/docs/api/tokens/#token-exchange-flow
-    console.log(publicToken, metadata);
+    const jwtToken = JSON.parse(sessionStorage.getItem('token'))['token'];
+    // send public_token to server
     const requestOptions = {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` },
         body: JSON.stringify({ token: publicToken })
     }
     const response = fetch('http://localhost:8080/api/private/accesstoken', requestOptions);
     console.log(response);
-  }, [token]);
+  }, []);
 
 //   const { open, ready } = usePlaidLink({
 //     token,

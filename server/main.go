@@ -38,6 +38,7 @@ func initRoutes() (r *gin.Engine) {
 			private.POST("/accesstoken", handlers.CreateAccessToken)
 			private.GET("/transactions", handlers.GetTransactions)
 			private.GET("/profile", handlers.Profile)
+			private.GET("/accounts", handlers.GetAccounts)
 		}
 	}
 	return r
