@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { NavLink, Navigate, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -29,8 +29,7 @@ const ResponsiveAppBar = () => {
     setAnchorElUser(event.currentTarget);
   };
 
-  const handleCloseNavMenu = (page) => {
-    navigate(`/${page}`);
+  const handleCloseNavMenu = () => {
     setAnchorElNav(null);
   };
 
@@ -81,7 +80,13 @@ const ResponsiveAppBar = () => {
               }}
             >
               {pages.map((page) => (
-                <MenuItem key={page} onClick={() => navigate(`/${page}`)}>{page}</MenuItem>
+                <MenuItem 
+                  key={page} 
+                  onClick={() => {
+                    setAnchorElNav(null);
+                    navigate(`/${page}`)
+                  }}
+                  >{page}</MenuItem>
               ))}
             </Menu>
           </Box>
@@ -91,23 +96,26 @@ const ResponsiveAppBar = () => {
             component="div"
             sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}
           >
-            🍌
+            LOGO
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
             {pages.map((page) => (
               <Button
                 key={page}
-                onClick={() => navigate(`/${page}`)}
+                onClick={() => {
+                  setAnchorElNav(null);
+                  navigate(`/${page}`);
+                }}
                 sx={{ my: 2, color: 'white', display: 'block' }}
-              >
-                {page}
-              </Button>
+              >{page}</Button>
             ))}
           </Box>
 
           <Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+              <IconButton 
+                onClick={handleOpenUserMenu} 
+                sx={{ p: 0 }}>
                 <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
               </IconButton>
             </Tooltip>
@@ -128,7 +136,10 @@ const ResponsiveAppBar = () => {
               onClose={handleCloseUserMenu}
             >
               {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                <MenuItem key={setting} onClick={() => {
+                    setAnchorElUser(null);
+                    navigate(`/${setting}`);
+                }}>
                   <Typography textAlign="center">{setting}</Typography>
                 </MenuItem>
               ))}

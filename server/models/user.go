@@ -1,61 +1,69 @@
 package models
 
 import (
+	"database/sql"
 	"errors"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
-func testHash(pass string) []byte {
-	result, _ := bcrypt.GenerateFromPassword([]byte("pass1"), 8)
-	return result
-}
+var (
+	DB *sql.DB
+)
 
-type User struct {
-	Username string `json:"username"`
-	Password string `json:"-"`
-}
-
-var userList = []User{
-	{Username: "user1@user.com", Password: string(testHash("pass1"))},
-	{Username: "user1@user.com", Password: string(testHash("pass2"))},
-	{Username: "user1@user.com", Password: string(testHash("pass3"))},
-}
-
-func RegisterNewUser(username, password string) (*User, error) {
+func RegisterNewUser(username, password string) error {
 	if strings.TrimSpace(password) == "" {
-		return nil, errors.New("the password can't be empty")
+		return errors.New("the password can't be empty")
 	} else if !isUsernameAvailable(username) {
-		return nil, errors.New("the username isn't available")
+		return errors.New("the username isn't available")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 8)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return errors.New(err.Error())
 	}
 
-	u := User{Username: username, Password: string(hashedPassword)}
+	sqlStatement := `
+	INSERT INTO users (email, password, createdon)
+	VALUES ($1, $2, $3)`
+	_, err = DB.Exec(sqlStatement, username, hashedPassword, time.Now())
+	if err != nil {
+		panic(err)
+	}
 
-	userList = append(userList, u)
-
-	return &u, nil
+	return nil
 }
 
-func isUsernameAvailable(username string) bool {
-	for _, u := range userList {
-		if u.Username == username {
+func isUsernameAvailable(email string) bool {
+	sqlStatement := `SELECT email FROM users WHERE email=$1;`
+	row := DB.QueryRow(sqlStatement, email)
+	switch err := row.Scan(&email); err {
+	case sql.ErrNoRows:
+		return true
+	case nil:
+		return false
+	default:
+		panic(err)
+	}
+}
+
+func IsUserValid(email string, password string) bool {
+	sqlStatement := `SELECT password, email FROM users WHERE email=$1;`
+	var pwHash string
+	row := DB.QueryRow(sqlStatement, email)
+	switch err := row.Scan(&pwHash, &email); err {
+	case sql.ErrNoRows: // User does not exist
+		return false
+	case nil:
+		match := bcrypt.CompareHashAndPassword([]byte(pwHash), []byte(password))
+		if match == nil {
+			return true
+		} else {
 			return false
 		}
+	default:
+		panic(err)
 	}
-	return true
-}
-
-func IsUserValid(username, password string) bool {
-	for _, u := range userList {
-		if u.Username == username && bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)) == nil {
-			return true
-		}
-	}
-	return false
 }

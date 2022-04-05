@@ -25,7 +25,7 @@ func Register(c *gin.Context) {
 		})
 	}
 
-	if _, err := models.RegisterNewUser(creds.User, creds.Password); err == nil {
+	if err := models.RegisterNewUser(creds.User, creds.Password); err == nil {
 		j := auth.JwtConfig{
 			SecretKey:  common.JWT_SECRET,
 			Issuer:     common.JWT_ISSUER,
@@ -50,14 +50,7 @@ func Register(c *gin.Context) {
 		c.Data(200, "application/json", data)
 
 	} else {
-		type errMsg struct {
-			Message error
-		}
-		obj := errMsg{
-			Message: err,
-		}
-		data, _ := json.Marshal(&obj)
-		c.JSON(400, data)
+		c.JSON(400, err)
 	}
 }
 

@@ -1,15 +1,17 @@
-import * as React from 'react';
+import React, { useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
+import { useEffect } from 'react';
 
 const columns = [
-  { field: 'id', headerName: 'ID', width: 70 },
-  { field: 'vendor', headerName: 'Vendor', width: 130 },
   {
     field: 'amount',
     headerName: 'Amount',
     type: 'number',
-    width: 90,
+    currencySymbol: 'USD',
+    width: 70,
   },
+  { field: 'merchant', headerName: 'Merchant', width: 300 },
+  { field: 'date', headerName: 'Date', width: 120},
 //   {
 //     field: 'fullName',
 //     headerName: 'Full name',
@@ -21,24 +23,60 @@ const columns = [
 //   },
 ];
 
-const rows = [
-    {id: 1, vendor: 'Test1', amount: 41.0, date: "1/21/22"},
-    {id: 2, vendor: 'Test2', amount: 14.50, date: "1/22/22"}
-];
+const Transactions = () => {
+  const [rows, setRows] = useState([]);
+  
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      const jwtToken = JSON.parse(sessionStorage.getItem('token'))['token'];
+      const requestOptions = {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` },
+      };
+      const response = await fetch('http://localhost:8080/api/private/gettransactions', requestOptions)
+      const transactions = await response.json();
+      console.log(typeof transactions.transactions);
+      setRows(transactions.transactions);
+    };
+    fetchTransactions();
+  }, []);
 
-export default function Transactions() {
-  return (
-    <div style={{ height: 400, width: '100%' }}>
+  let txList = rows.map(function(tx, index){
+    return {id: tx.ID, 
+            merchant: tx.MerchantName, 
+            amount: tx.Amount,
+            date: tx.Date,
+          };
+  });
+
+  return(
+    <div style={{ height: 600, width: '100%' }}>
       <DataGrid
-        rows={rows}
+        rows={ txList }
         columns={columns}
-        pageSize={5}
-        rowsPerPageOptions={[5]}
+        pageSize={15}
+        rowsPerPageOptions={[15]}
         checkboxSelection
       />
     </div>
-  );
-}
+  )
+};
+
+export default Transactions;
+
+// export default function Transactions() {
+//   return (
+    // <div style={{ height: 400, width: '100%' }}>
+    //   <DataGrid
+    //     rows={rows}
+    //     columns={columns}
+    //     pageSize={5}
+    //     rowsPerPageOptions={[5]}
+    //     checkboxSelection
+    //   />
+    // </div>
+//   );
+// }
 
 
 // class Transactions extends Component {

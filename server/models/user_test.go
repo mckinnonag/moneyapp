@@ -1,6 +1,10 @@
 package models
 
-import "testing"
+import (
+	"testing"
+
+	_ "github.com/lib/pq"
+)
 
 func TestUsernameAvailability(t *testing.T) {
 	SaveLists()

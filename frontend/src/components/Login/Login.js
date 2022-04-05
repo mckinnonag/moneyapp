@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import useAuth from '../Auth/Auth.js';
 import './Login.css'
 
 async function loginUser(credentials) {
@@ -16,6 +17,8 @@ async function loginUser(credentials) {
 export default function Login({ setToken }) {
   const [username, setUserName] = useState();
   const [password, setPassword] = useState();
+  const { login } = useAuth();
+  
   const [credentialError, setCredentialError] = useState();
 
   const handleSubmit = async e => {
@@ -34,6 +37,7 @@ export default function Login({ setToken }) {
     } catch {
       setCredentialError('Incorrect username or password.');
     }
+    // login();
   }
 
   return(

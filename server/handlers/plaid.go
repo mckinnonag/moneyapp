@@ -26,15 +26,6 @@ var transferID string
 // Temporary testing bucket for access tokens
 var accessTokens map[string]string
 
-type accountInfo struct {
-	AccountId        string
-	BalanceAvailable float32
-	Name             string
-	OfficialName     string
-	Subtype          plaid.NullableAccountSubtype
-	Type             string
-}
-
 func renderError(c *gin.Context, originalErr error) {
 	if plaidError, err := plaid.ToPlaidError(originalErr); err == nil {
 		// Return 200 and allow the front end to render the error.
@@ -161,13 +152,6 @@ func CreateAccessToken(c *gin.Context) {
 	c.JSON(http.StatusOK, nil)
 }
 
-func GetTransactions(c *gin.Context) {
-	if accessToken == "" {
-		return
-	}
-
-}
-
 // Helper function to determine if Transfer is in Plaid product array
 // func itemExists(array []string, product string) bool {
 // 	for _, item := range array {
@@ -179,11 +163,16 @@ func GetTransactions(c *gin.Context) {
 // 	return false
 // }
 
-// type GetAccountsPayload struct {
-// 	Email string `json:"email"`
-// }
-
 func GetAccounts(c *gin.Context) {
+	type accountInfo struct {
+		AccountId        string
+		BalanceAvailable float32
+		Name             string
+		OfficialName     string
+		Subtype          plaid.NullableAccountSubtype
+		Type             string
+	}
+
 	// Call the Plaid API to get a list of accounts
 	ctx := context.Background()
 	email, exists := c.Get("email")
@@ -192,7 +181,6 @@ func GetAccounts(c *gin.Context) {
 	}
 	accessToken = accessTokens[email.(string)]
 	accessToken = "access-sandbox-410dea3e-79b1-4c2a-8935-1164190fc552"
-	fmt.Println(accessToken)
 	accountsGetRequest := plaid.NewAccountsGetRequest(accessToken)
 	// accountsGetRequest.SetOptions(plaid.AccountsGetRequestOptions{
 	// 	AccountIds: &[]string{},
@@ -227,14 +215,89 @@ func GetAccounts(c *gin.Context) {
 		accts = append(accts, acct)
 	}
 
-	// fmt.Println(accts)
-
-	// body, err := json.Marshal(accts[0])
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-
 	c.JSON(200, gin.H{
 		"accounts": accts,
+	})
+}
+
+func RemoveAccount(c *gin.Context) {
+	ctx := context.Background()
+	email, exists := c.Get("email")
+	if !exists {
+		log.Println("email doesn't exist")
+	}
+	accessToken = accessTokens[email.(string)]
+
+	request := plaid.NewItemRemoveRequest(accessToken)
+	_, _, err := common.PlaidClient.PlaidApi.ItemRemove(ctx).ItemRemoveRequest(*request).Execute()
+	if err != nil {
+		log.Println(err)
+	}
+	// The Item was removed and the access_token is now invalid
+}
+
+func GetTransactions(c *gin.Context) {
+	type transaction struct {
+		ID              string
+		Category        []string
+		Location        string
+		Name            string
+		Amount          float32
+		IsoCurrencyCode string
+		Date            string
+		Pending         bool
+		MerchantName    string
+		PaymentChannel  string
+	}
+
+	const iso8601TimeFormat = "2006-01-02"
+	startDate := time.Now().Add(-365 * 24 * time.Hour).Format(iso8601TimeFormat)
+	endDate := time.Now().Format(iso8601TimeFormat)
+
+	ctx := context.Background()
+	email, exists := c.Get("email")
+	if !exists {
+		log.Println("email doesn't exist")
+	}
+	accessToken = accessTokens[email.(string)]
+	accessToken = "access-sandbox-410dea3e-79b1-4c2a-8935-1164190fc552"
+
+	request := plaid.NewTransactionsGetRequest(
+		accessToken,
+		startDate,
+		endDate,
+	)
+
+	options := plaid.TransactionsGetRequestOptions{
+		Count:  plaid.PtrInt32(100),
+		Offset: plaid.PtrInt32(0),
+	}
+
+	request.SetOptions(options)
+
+	res, _, err := common.PlaidClient.PlaidApi.TransactionsGet(ctx).TransactionsGetRequest(*request).Execute()
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	var transactions []transaction
+	for _, t := range res.Transactions {
+		var merchant string
+		if t.MerchantName.Get() != nil {
+			merchant = *t.MerchantName.Get()
+		}
+
+		tx := transaction{
+			ID:           t.TransactionId,
+			MerchantName: merchant,
+			Amount:       t.Amount,
+			Date:         t.Date,
+		}
+		transactions = append(transactions, tx)
+	}
+
+	c.JSON(200, gin.H{
+		"transactions": transactions,
 	})
 }

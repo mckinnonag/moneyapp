@@ -11,18 +11,22 @@ import (
 )
 
 var (
-	PLAID_CLIENT_ID                      = ""
-	PLAID_SECRET                         = ""
-	PLAID_ENV                            = ""
-	PLAID_PRODUCTS                       = ""
-	PLAID_COUNTRY_CODES                  = ""
-	PLAID_REDIRECT_URI                   = ""
-	APP_PORT                             = ""
-	JWT_SECRET                           = ""
-	JWT_ISSUER                           = ""
-	DATABASE_URL                         = ""
-	PlaidClient         *plaid.APIClient = nil
+	PLAID_CLIENT_ID     string
+	PLAID_SECRET        string
+	PLAID_ENV           string
+	PLAID_PRODUCTS      string
+	PLAID_COUNTRY_CODES string
+	PLAID_REDIRECT_URI  string
+	APP_PORT            string
+	JWT_SECRET          string
+	JWT_ISSUER          string
+	DATABASE_URL        string
+	DATABASE_PORT       int
+	DATABASE_USER       string
+	DATABASE_NAME       string
+	DATABASE_PW         string
 	JWT_EXPIRY          int64
+	PlaidClient         *plaid.APIClient = nil
 )
 
 var environments = map[string]plaid.Environment{
@@ -39,7 +43,14 @@ func Init() {
 
 	DATABASE_URL = os.Getenv("DATABASE_URL")
 	if DATABASE_URL == "" {
-		DATABASE_URL = "sqlite:///"
+		DATABASE_URL = "localhost"
+	}
+	DATABASE_PORT, _ = strconv.Atoi(os.Getenv("DATABASE_PORT"))
+	DATABASE_USER = os.Getenv("DATABASE_USER")
+	DATABASE_PW = os.Getenv("DATABASE_PW")
+	DATABASE_NAME = os.Getenv("DATABASE_NAME")
+	if DATABASE_USER == "" || DATABASE_PW == "" || DATABASE_NAME == "" {
+		log.Fatal("DATABASE_USER or DATABASE_PW is not set")
 	}
 
 	JWT_SECRET = os.Getenv("JWT_SECRET")
