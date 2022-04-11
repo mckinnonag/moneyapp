@@ -25,6 +25,7 @@ var (
 	DATABASE_USER       string
 	DATABASE_NAME       string
 	DATABASE_PW         string
+	DATABASE_SSL        string
 	JWT_EXPIRY          int64
 	PlaidClient         *plaid.APIClient = nil
 )
@@ -49,8 +50,12 @@ func Init() {
 	DATABASE_USER = os.Getenv("DATABASE_USER")
 	DATABASE_PW = os.Getenv("DATABASE_PW")
 	DATABASE_NAME = os.Getenv("DATABASE_NAME")
+	DATABASE_SSL = os.Getenv("DATABASE_SSL")
 	if DATABASE_USER == "" || DATABASE_PW == "" || DATABASE_NAME == "" {
 		log.Fatal("DATABASE_USER or DATABASE_PW is not set")
+	}
+	if DATABASE_SSL == "" {
+		DATABASE_SSL = "disable"
 	}
 
 	JWT_SECRET = os.Getenv("JWT_SECRET")

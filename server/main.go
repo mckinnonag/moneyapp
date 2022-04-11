@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"flag"
 	"fmt"
 	"log"
 	"server/common"
@@ -11,6 +12,9 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 )
 
@@ -28,7 +32,7 @@ func initRoutes() (r *gin.Engine) {
 	r.Use(cors.New(corsConfig))
 
 	r.GET("/ping", func(c *gin.Context) {
-		c.String(200, "pong")
+		c.String(200, "")
 	})
 
 	api := r.Group("/api")
@@ -53,8 +57,8 @@ func initRoutes() (r *gin.Engine) {
 
 func main() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		common.DATABASE_URL, common.DATABASE_PORT, common.DATABASE_USER, common.DATABASE_PW, common.DATABASE_NAME)
+		"password=%s dbname=%s sslmode=%s",
+		common.DATABASE_URL, common.DATABASE_PORT, common.DATABASE_USER, common.DATABASE_PW, common.DATABASE_NAME, common.DATABASE_SSL)
 
 	var err error
 	models.DB, err = sql.Open("postgres", psqlInfo)
@@ -68,10 +72,22 @@ func main() {
 		panic(err)
 	}
 
+	var migrationDir = flag.String("migration.files", "../db/migration", "Directory where the migration files are located ?")
+	driver, err := postgres.WithInstance(models.DB, &postgres.Config{})
+	m, err := migrate.NewWithDatabaseInstance(
+		fmt.Sprintf("file://%s", *migrationDir), // file://path/to/directory
+		"000001_init_schema.up.sql://../db/migration", driver)
+	if err != nil {
+		panic(err)
+	}
+	m.Up()
+
+	fmt.Println("Database Migrated!")
+
 	r := initRoutes()
 
 	err = r.Run(":" + common.APP_PORT)
 	if err != nil {
-		panic("unable to start server")
+		panic(err)
 	}
 }
