@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  database:
+    image: postgres:alpine3.15
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5433:5433"
+    volumes:
+      - data:/var/lib/postgresql/data
+  # server:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   env_file: .env
+  #   depends_on:
+  #     - database
+  #   networks:
+  #     - default
+  #   ports:
+  #   - "8080:8080"
+volumes:
+  data:
+    driver: local

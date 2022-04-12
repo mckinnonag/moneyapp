@@ -1,5 +1,5 @@
 postgres:
-	docker run --name moneydb -p 5001:5001 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:latest
+	docker run --name moneydb --rm -e POSTGRES_USER=root -e POSTGRES_PASSWORD=4y7sV96vA9wv46VR -e PGDATA=/var/lib/postgresql/data/pgdata -v /tmp:/var/lib/postgresql/data -p 5432:5432 -it postgres:alpine3.15
 
 createdb:
 	docker exec -it moneydb createdb --username=root --owner=root moneyapp
@@ -8,9 +8,11 @@ dropdb:
 	docker exec -it moneydb dropdb moneyapp
 
 migrateup:
-	migrate -path db/migration -database postgresql://root:secret@localhost:5001/moneydb -verbose up
+	cmd/migrate -path db/migration -database postgresql://root:4y7sV96vA9wv46VR@localhost:5234/moneydb -verbose up
+
 
 migratedown:
-	migrate -path db/migration -database "postgressql://root:secret@localhost:5001/moneydb?sslmode=disable" -verbose down
+	migrate -path db/migration -database "postgressql://root:4y7sV96vA9wv46VR@localhost:5234/moneydb?sslmode=disable" -verbose down
+
 
 .PHONY: postgres createdb dropdb migrateup migratedown
