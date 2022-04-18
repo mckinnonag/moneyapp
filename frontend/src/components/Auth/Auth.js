@@ -4,10 +4,10 @@ import useToken from './useToken.js'
 const authContext = React.createContext(null);
 
 export function AuthProvider({ children }) {
-    const { token, setToken } = useToken('');
+    const { token, setToken } = useToken();
 //   let [user, setUser] = React.useState(null);
 
-  let login = (credentials, setToken, callback) => {
+  let login = (credentials, callback) => {
     return fakeAuthProvider.login(() => {
     //   setUser(newUser);
       callback();

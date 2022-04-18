@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	common "server/common"
+	"server/models"
 	"strings"
 	"time"
 
@@ -15,16 +15,11 @@ import (
 
 // We store the access_token in memory - in production, store it in a secure
 // persistent data store.
-var accessToken string
-var itemID string
 
 // The transfer_id is only relevant for the Transfer ACH product.
 // We store the transfer_id in memory - in production, store it in a secure
 // persistent data store
 var transferID string
-
-// Temporary testing bucket for access tokens
-var accessTokens map[string]string
 
 func renderError(c *gin.Context, originalErr error) {
 	if plaidError, err := plaid.ToPlaidError(originalErr); err == nil {
@@ -95,7 +90,6 @@ func linkTokenCreate(
 }
 
 func getAccessToken(c *gin.Context, publicToken string) {
-	// publicToken := c.PostForm("public_token")
 	email, _ := c.Get("email")
 	ctx := context.Background()
 
@@ -108,20 +102,14 @@ func getAccessToken(c *gin.Context, publicToken string) {
 		return
 	}
 
-	accessToken = exchangePublicTokenResp.GetAccessToken()
-	itemID = exchangePublicTokenResp.GetItemId()
-	// if itemExists(strings.Split(common.PLAID_PRODUCTS, ","), "transfer") {
-	// 	transferID, err = authorizeAndCreateTransfer(ctx, common.PlaidClient, accessToken)
-	// }
+	accessToken := exchangePublicTokenResp.GetAccessToken()
+	itemID := exchangePublicTokenResp.GetItemId()
 
-	fmt.Println("public token: " + publicToken)
-	fmt.Println("access token: " + accessToken)
-	fmt.Println("item ID: " + itemID)
-
-	if accessTokens == nil {
-		accessTokens = make(map[string]string)
+	err = models.SetAccessToken(email.(string), accessToken, itemID)
+	if err != nil {
+		renderError(c, err)
+		return
 	}
-	accessTokens[email.(string)] = accessToken
 
 	c.JSON(http.StatusOK, gin.H{
 		"access_token": accessToken,
@@ -179,8 +167,10 @@ func GetAccounts(c *gin.Context) {
 	if !exists {
 		log.Println("email doesn't exist")
 	}
-	accessToken = accessTokens[email.(string)]
-	accessToken = "access-sandbox-410dea3e-79b1-4c2a-8935-1164190fc552"
+	accessTokens, err := models.GetAccessTokens(email.(string))
+	if err != nil {
+		renderError(c, err)
+	}
 	accountsGetRequest := plaid.NewAccountsGetRequest(accessToken)
 	// accountsGetRequest.SetOptions(plaid.AccountsGetRequestOptions{
 	// 	AccountIds: &[]string{},
@@ -226,10 +216,13 @@ func RemoveAccount(c *gin.Context) {
 	if !exists {
 		log.Println("email doesn't exist")
 	}
-	accessToken = accessTokens[email.(string)]
+	accessToken, err := models.GetAccessToken(email.(string))
+	if err != nil {
+		renderError(c, err)
+	}
 
 	request := plaid.NewItemRemoveRequest(accessToken)
-	_, _, err := common.PlaidClient.PlaidApi.ItemRemove(ctx).ItemRemoveRequest(*request).Execute()
+	_, _, err = common.PlaidClient.PlaidApi.ItemRemove(ctx).ItemRemoveRequest(*request).Execute()
 	if err != nil {
 		log.Println(err)
 	}
@@ -259,8 +252,10 @@ func GetTransactions(c *gin.Context) {
 	if !exists {
 		log.Println("email doesn't exist")
 	}
-	accessToken = accessTokens[email.(string)]
-	accessToken = "access-sandbox-410dea3e-79b1-4c2a-8935-1164190fc552"
+	accessToken, err := models.GetAccessToken(email.(string))
+	if err != nil {
+		renderError(c, err)
+	}
 
 	request := plaid.NewTransactionsGetRequest(
 		accessToken,

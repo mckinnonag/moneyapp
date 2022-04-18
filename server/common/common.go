@@ -42,15 +42,15 @@ func Init() {
 		fmt.Println("Error when loading environment variables from .env file %w", err)
 	}
 
-	DATABASE_URL = os.Getenv("DATABASE_URL")
+	DATABASE_URL = os.Getenv("POSTGRES_URL")
 	if DATABASE_URL == "" {
 		DATABASE_URL = "localhost"
 	}
-	DATABASE_PORT, _ = strconv.Atoi(os.Getenv("DATABASE_PORT"))
-	DATABASE_USER = os.Getenv("DATABASE_USER")
-	DATABASE_PW = os.Getenv("DATABASE_PW")
-	DATABASE_NAME = os.Getenv("DATABASE_NAME")
-	DATABASE_SSL = os.Getenv("DATABASE_SSL")
+	DATABASE_PORT, _ = strconv.Atoi(os.Getenv("POSTGRES_PORT"))
+	DATABASE_USER = os.Getenv("POSTGRES_USER")
+	DATABASE_PW = os.Getenv("POSTGRES_PASSWORD")
+	DATABASE_NAME = os.Getenv("POSTGRES_NAME")
+	DATABASE_SSL = os.Getenv("POSTGRES_SSL")
 	if DATABASE_USER == "" || DATABASE_PW == "" || DATABASE_NAME == "" {
 		log.Fatal("DATABASE_USER or DATABASE_PW is not set")
 	}

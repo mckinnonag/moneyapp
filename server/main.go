@@ -57,8 +57,8 @@ func initRoutes() (r *gin.Engine) {
 
 func main() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=%s",
-		common.DATABASE_URL, common.DATABASE_PORT, common.DATABASE_USER, common.DATABASE_PW, common.DATABASE_NAME, common.DATABASE_SSL)
+		"password=%s dbname=%s",
+		common.DATABASE_URL, common.DATABASE_PORT, common.DATABASE_USER, common.DATABASE_PW, common.DATABASE_NAME)
 
 	var err error
 	models.DB, err = sql.Open("postgres", psqlInfo)
@@ -67,22 +67,24 @@ func main() {
 	}
 	defer models.DB.Close()
 
-	err = models.DB.Ping()
-	if err != nil {
-		panic(err)
+	if err = models.DB.Ping(); err != nil {
+		log.Fatal("unable to ping database")
 	}
 
 	var migrationDir = flag.String("migration.files", "../db/migration", "Directory where the migration files are located ?")
 	driver, err := postgres.WithInstance(models.DB, &postgres.Config{})
+	file := "000001_init_schema.up.sql://../db/migration"
 	m, err := migrate.NewWithDatabaseInstance(
-		fmt.Sprintf("file://%s", *migrationDir), // file://path/to/directory
-		"000001_init_schema.up.sql://../db/migration", driver)
+		fmt.Sprintf("file://%s", *migrationDir),
+		file, driver)
 	if err != nil {
 		panic(err)
 	}
-	m.Up()
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		panic(err)
+	}
 
-	fmt.Println("Database Migrated!")
+	log.Println("Database Migrated!")
 
 	r := initRoutes()
 

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
+import useAuth from '../Auth/Auth.js';
 
 async function registerUser(credentials) {
     return fetch('http://localhost:8080/api/public/register', {
@@ -69,6 +71,6 @@ export default function Register({ setToken }) {
   )
 }
 
-// Register.propTypes = {
-//     setToken: PropTypes.func.isRequired
-// }
+Register.propTypes = {
+    setToken: PropTypes.func.isRequired
+}
