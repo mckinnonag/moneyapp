@@ -1,29 +1,40 @@
-import * as React from 'react';
+import React, { useState, useContext, createContext } from 'react';
 import useToken from './useToken.js'
 
-const authContext = React.createContext(null);
+const authContext = createContext(null);
 
 export function AuthProvider({ children }) {
-    const { token, setToken } = useToken();
-//   let [user, setUser] = React.useState(null);
+    // const { token, setToken } = useToken();
+  const auth = useProvideAuth();
+  return <authContext.Provider value={auth}>{children}</authContext.Provider>;
+}
 
-  let login = (credentials, callback) => {
+export const useAuth = () => {
+  return useContext(authContext);
+}
+
+function useProvideAuth() {
+  const [user, setUser] = useState(null);
+
+  const login = (credentials, callback) => {
     return fakeAuthProvider.login(() => {
-    //   setUser(newUser);
+      setUser(credentials.email);
       callback();
     });
   };
 
-  let logout = (callback) => {
+  const logout = (callback) => {
     return fakeAuthProvider.logout(() => {
-    //   setUser(null);
+      setUser(null);
       callback();
     });
   };
 
-  let value = { token, login, logout };
-
-  return <authContext.Provider value={value}>{children}</authContext.Provider>;
+  return {
+    user,
+    login,
+    logout,
+  };
 }
 
 async function loginUser(credentials) {
@@ -45,12 +56,12 @@ const fakeAuthProvider = {
       fakeAuthProvider.isAuthenticated = true;
       setTimeout(callback, 100); // fake async
     },
-    logout(credentials, callback) {
+    logout(callback) {
       fakeAuthProvider.isAuthenticated = false;
       setTimeout(callback, 100);
     },
   };
 
 export default function AuthConsumer() {
-  return React.useContext(authContext);
+  return useContext(authContext);
 }

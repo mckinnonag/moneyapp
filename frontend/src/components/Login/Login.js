@@ -28,16 +28,16 @@ export default function Login({ setToken }) {
       return
     }
 
-    try {
-      const token = await loginUser({
-        username,
-        password
-      });
-      setToken(token);
-    } catch {
-      setCredentialError('Incorrect username or password.');
-    }
-    // login();
+    // try {
+    //   const token = await loginUser({
+    //     username,
+    //     password
+    //   });
+    //   setToken(token);
+    // } catch {
+    //   setCredentialError('Incorrect username or password.');
+    // }
+    login();
   }
 
   return(
@@ -63,6 +63,6 @@ export default function Login({ setToken }) {
   )
 }
 
-Login.propTypes = {
-    setToken: PropTypes.func.isRequired
-}
+// Login.propTypes = {
+//     setToken: PropTypes.func.isRequired
+// }

@@ -11,35 +11,38 @@ import Register from '../Register/Register';
 import useToken from '../Auth/useToken';
 import Nav from '../Nav/Nav.js'
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary.js'
-import { AuthProvider } from '../Auth/Auth.js'
+import { useAuth, AuthProvider } from '../Auth/Auth.js'
 
 function App() {
-  const { token, setToken } = useToken();
-  if (!token) {
-    return (
+  // const { token, setToken } = useToken();
+  const auth = useAuth();
+  return (
+    !auth ?
+      // Public
       <AuthProvider>
         <BrowserRouter>
           <ErrorBoundary>
-            <Login setToken={setToken} />
             <Routes>
+              <Route path="/" element={<h1>Placeholder homepage</h1>} />
+              <Route path="*" element={<Login />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              {/* <Route path="/" element={<h1>Placeholder homepage</h1>} />
+              <Route path="*" setToken={setToken} element={<Login />} />
               <Route path="/login" setToken={setToken} element={<Login />} />
-              <Route path="/register" setToken={setToken} element={<Register />} />
+              <Route path="/register" setToken={setToken} element={<Register />} /> */}
             </Routes>
           </ErrorBoundary>
         </BrowserRouter>
       </AuthProvider>
-    )
-  } else {
-    return (
+      :
+      // Private
       <AuthProvider>
         <BrowserRouter>
           <Nav />
           <ErrorBoundary>
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              {/* <Route path="/login" setToken={setToken} element={<Login /> } />
-              <Route path="/logintest" element={<LoginTest />} />
-              <Route path="/register" setToken={setToken} element={<Register />} /> */}
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/preferences" element={<Preferences />} />
               <Route path="/accounts" element={<Accounts />} />
@@ -49,8 +52,7 @@ function App() {
           </ErrorBoundary>
         </BrowserRouter>
       </AuthProvider>
-    );
-  }
+  );
 }
 
 export default App;
