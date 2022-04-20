@@ -1,10 +1,8 @@
 import React, { useState, useContext, createContext } from 'react';
-import useToken from './useToken.js'
 
 const authContext = createContext(null);
 
 export function AuthProvider({ children }) {
-    // const { token, setToken } = useToken();
   const auth = useProvideAuth();
   return <authContext.Provider value={auth}>{children}</authContext.Provider>;
 }
@@ -17,14 +15,13 @@ function useProvideAuth() {
   const [user, setUser] = useState(null);
 
   const login = (credentials, callback) => {
-    return fakeAuthProvider.login(() => {
-      setUser(credentials.email);
-      callback();
-    });
+    customAuthProvider.login(credentials, callback);
+    console.log('setting user to ' + credentials.username);
+    setUser(credentials.username);
   };
 
   const logout = (callback) => {
-    return fakeAuthProvider.logout(() => {
+    return customAuthProvider.logout(() => {
       setUser(null);
       callback();
     });
@@ -37,30 +34,37 @@ function useProvideAuth() {
   };
 }
 
-async function loginUser(credentials) {
-    return fetch('http://localhost:8080/api/public/login', {
+const customAuthProvider = {
+  isAuthenticated: false,
+  login: (credentials, callback) => {
+    const request = new Request('http://localhost:8080/api/public/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(credentials)
-    })
-      .then(data => data.json())
-}
-
-const fakeAuthProvider = {
-    isAuthenticated: false,
-    login(credentials, setToken, callback) {
-      const token = loginUser(credentials)
-      setToken(token);
-      fakeAuthProvider.isAuthenticated = true;
-      setTimeout(callback, 100); // fake async
-    },
-    logout(callback) {
-      fakeAuthProvider.isAuthenticated = false;
-      setTimeout(callback, 100);
-    },
-  };
+      body: JSON.stringify(credentials),
+    });
+    return fetch(request)
+      .then(response => {
+          if (response.status < 200 || response.status >= 300) {
+              throw new Error(response.statusText);
+          }
+          return response.json();
+      })
+      .then(token => {
+          sessionStorage.setItem('token', JSON.stringify(token));
+          customAuthProvider.isAuthenticated = true;
+      })
+      .then(callback())
+      .catch(() => {
+          throw new Error('Network error')
+      });
+  },
+  logout(callback) {
+    customAuthProvider.isAuthenticated = false;
+    // setTimeout(callback, 100);
+  },
+};
 
 export default function AuthConsumer() {
   return useContext(authContext);

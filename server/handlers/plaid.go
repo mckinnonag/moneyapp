@@ -13,9 +13,6 @@ import (
 	plaid "github.com/plaid/plaid-go/plaid"
 )
 
-// We store the access_token in memory - in production, store it in a secure
-// persistent data store.
-
 // The transfer_id is only relevant for the Transfer ACH product.
 // We store the transfer_id in memory - in production, store it in a secure
 // persistent data store
@@ -171,38 +168,42 @@ func GetAccounts(c *gin.Context) {
 	if err != nil {
 		renderError(c, err)
 	}
-	accountsGetRequest := plaid.NewAccountsGetRequest(accessToken)
-	// accountsGetRequest.SetOptions(plaid.AccountsGetRequestOptions{
-	// 	AccountIds: &[]string{},
-	// })
-	accountsGetResp, _, _ := common.PlaidClient.PlaidApi.AccountsGet(ctx).AccountsGetRequest(
-		*accountsGetRequest,
-	).Execute()
-	response := accountsGetResp.GetAccounts()
 
 	var accts []accountInfo
-	for _, a := range response {
-		accountId := a.AccountId
-		var balanceAvailable float32
-		if a.Balances.Available.Get() != nil {
-			balanceAvailable = *a.Balances.Available.Get()
-		}
 
-		var officialName string
+	for _, accessToken := range accessTokens {
+		accountsGetRequest := plaid.NewAccountsGetRequest(accessToken)
+		// accountsGetRequest.SetOptions(plaid.AccountsGetRequestOptions{
+		// 	AccountIds: &[]string{},
+		// })
+		accountsGetResp, _, _ := common.PlaidClient.PlaidApi.AccountsGet(ctx).AccountsGetRequest(
+			*accountsGetRequest,
+		).Execute()
+		response := accountsGetResp.GetAccounts()
 
-		if a.OfficialName.Get() != nil {
-			officialName = *a.OfficialName.Get()
-		}
+		for _, a := range response {
+			accountId := a.AccountId
+			var balanceAvailable float32
+			if a.Balances.Available.Get() != nil {
+				balanceAvailable = *a.Balances.Available.Get()
+			}
 
-		acct := accountInfo{
-			AccountId:        accountId,
-			BalanceAvailable: balanceAvailable,
-			Name:             a.Name,
-			OfficialName:     officialName,
-			// Subtype:          *a.Subtype.Get(),
-			// Type:             *a.Type.Get(),
+			var officialName string
+
+			if a.OfficialName.Get() != nil {
+				officialName = *a.OfficialName.Get()
+			}
+
+			acct := accountInfo{
+				AccountId:        accountId,
+				BalanceAvailable: balanceAvailable,
+				Name:             a.Name,
+				OfficialName:     officialName,
+				// Subtype:          *a.Subtype.Get(),
+				// Type:             *a.Type.Get(),
+			}
+			accts = append(accts, acct)
 		}
-		accts = append(accts, acct)
 	}
 
 	c.JSON(200, gin.H{
@@ -216,17 +217,18 @@ func RemoveAccount(c *gin.Context) {
 	if !exists {
 		log.Println("email doesn't exist")
 	}
-	accessToken, err := models.GetAccessToken(email.(string))
+	accessTokens, err := models.GetAccessTokens(email.(string))
 	if err != nil {
 		renderError(c, err)
 	}
 
-	request := plaid.NewItemRemoveRequest(accessToken)
-	_, _, err = common.PlaidClient.PlaidApi.ItemRemove(ctx).ItemRemoveRequest(*request).Execute()
-	if err != nil {
-		log.Println(err)
+	for _, accessToken := range accessTokens {
+		request := plaid.NewItemRemoveRequest(accessToken)
+		_, _, err = common.PlaidClient.PlaidApi.ItemRemove(ctx).ItemRemoveRequest(*request).Execute()
+		if err != nil {
+			log.Println(err)
+		}
 	}
-	// The Item was removed and the access_token is now invalid
 }
 
 func GetTransactions(c *gin.Context) {
@@ -252,44 +254,47 @@ func GetTransactions(c *gin.Context) {
 	if !exists {
 		log.Println("email doesn't exist")
 	}
-	accessToken, err := models.GetAccessToken(email.(string))
+	accessTokens, err := models.GetAccessTokens(email.(string))
 	if err != nil {
 		renderError(c, err)
 	}
 
-	request := plaid.NewTransactionsGetRequest(
-		accessToken,
-		startDate,
-		endDate,
-	)
-
-	options := plaid.TransactionsGetRequestOptions{
-		Count:  plaid.PtrInt32(100),
-		Offset: plaid.PtrInt32(0),
-	}
-
-	request.SetOptions(options)
-
-	res, _, err := common.PlaidClient.PlaidApi.TransactionsGet(ctx).TransactionsGetRequest(*request).Execute()
-
-	if err != nil {
-		log.Println(err)
-	}
-
 	var transactions []transaction
-	for _, t := range res.Transactions {
-		var merchant string
-		if t.MerchantName.Get() != nil {
-			merchant = *t.MerchantName.Get()
+
+	for _, accessToken := range accessTokens {
+		request := plaid.NewTransactionsGetRequest(
+			accessToken,
+			startDate,
+			endDate,
+		)
+
+		options := plaid.TransactionsGetRequestOptions{
+			Count:  plaid.PtrInt32(100),
+			Offset: plaid.PtrInt32(0),
 		}
 
-		tx := transaction{
-			ID:           t.TransactionId,
-			MerchantName: merchant,
-			Amount:       t.Amount,
-			Date:         t.Date,
+		request.SetOptions(options)
+
+		res, _, err := common.PlaidClient.PlaidApi.TransactionsGet(ctx).TransactionsGetRequest(*request).Execute()
+
+		if err != nil {
+			log.Println(err)
 		}
-		transactions = append(transactions, tx)
+
+		for _, t := range res.Transactions {
+			var merchant string
+			if t.MerchantName.Get() != nil {
+				merchant = *t.MerchantName.Get()
+			}
+
+			tx := transaction{
+				ID:           t.TransactionId,
+				MerchantName: merchant,
+				Amount:       t.Amount,
+				Date:         t.Date,
+			}
+			transactions = append(transactions, tx)
+		}
 	}
 
 	c.JSON(200, gin.H{

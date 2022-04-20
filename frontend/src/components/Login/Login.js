@@ -1,25 +1,17 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
+import { useNavigate, useLocation } from 'react-router-dom'
 import useAuth from '../Auth/Auth.js';
 import './Login.css'
-
-async function loginUser(credentials) {
-    return fetch('http://localhost:8080/api/public/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(credentials)
-    })
-      .then(data => data.json())
-}
 
 export default function Login({ setToken }) {
   const [username, setUserName] = useState();
   const [password, setPassword] = useState();
   const { login } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   
   const [credentialError, setCredentialError] = useState();
+  const from = location.state?.from?.pathname || "/";
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -28,16 +20,10 @@ export default function Login({ setToken }) {
       return
     }
 
-    // try {
-    //   const token = await loginUser({
-    //     username,
-    //     password
-    //   });
-    //   setToken(token);
-    // } catch {
-    //   setCredentialError('Incorrect username or password.');
-    // }
-    login();
+    login({username, password}, () => {
+      console.log('navigating to ' + from);
+      navigate(from, { replace: true });
+    });
   }
 
   return(
@@ -62,7 +48,3 @@ export default function Login({ setToken }) {
       </div>
   )
 }
-
-// Login.propTypes = {
-//     setToken: PropTypes.func.isRequired
-// }
