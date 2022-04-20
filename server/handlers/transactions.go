@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	models "server/models"
 
 	"github.com/gin-gonic/gin"
@@ -9,8 +8,12 @@ import (
 
 func Transactions(c *gin.Context) {
 	email, _ := c.Get("email")
-	transactions := models.GetAllTransactions(email.(string))
-	data, _ := json.Marshal(&transactions)
+	transactions, err := models.GetAllTransactions(email.(string))
 
-	c.Data(200, "application/json", data)
+	if err != nil {
+		c.JSON(500, nil)
+	}
+	c.JSON(200, gin.H{
+		"transactions": transactions,
+	})
 }

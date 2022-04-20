@@ -16,7 +16,6 @@ function useProvideAuth() {
 
   const login = (credentials, callback) => {
     customAuthProvider.login(credentials, callback);
-    console.log('setting user to ' + credentials.username);
     setUser(credentials.username);
   };
 
@@ -62,7 +61,7 @@ const customAuthProvider = {
   },
   logout(callback) {
     customAuthProvider.isAuthenticated = false;
-    // setTimeout(callback, 100);
+    sessionStorage.removeItem('token');
   },
 };
 

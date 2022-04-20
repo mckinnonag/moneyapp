@@ -26,15 +26,15 @@ func isUsernameAvailable(email string) bool {
 	}
 }
 
-func lookupUser(email string) (id string, err error) {
+func lookupUser(email string) (user_id string, err error) {
 	// Helper function. Accepts email; returns user_id
-	sqlStatement := `SELECT id, email FROM users WHERE email=$1;`
+	sqlStatement := `SELECT user_id, email FROM users WHERE email=$1;`
 	row := DB.QueryRow(sqlStatement, email)
-	switch err = row.Scan(&email); err {
+	switch err = row.Scan(&user_id, &email); err {
 	case sql.ErrNoRows:
 		return "", errors.New("user does not exist")
 	case nil:
-		return id, nil
+		return user_id, nil
 	default:
 		return "", err
 	}

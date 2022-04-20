@@ -232,18 +232,6 @@ func RemoveAccount(c *gin.Context) {
 }
 
 func GetTransactions(c *gin.Context) {
-	type transaction struct {
-		ID              string
-		Category        []string
-		Location        string
-		Name            string
-		Amount          float32
-		IsoCurrencyCode string
-		Date            string
-		Pending         bool
-		MerchantName    string
-		PaymentChannel  string
-	}
 
 	const iso8601TimeFormat = "2006-01-02"
 	startDate := time.Now().Add(-365 * 24 * time.Hour).Format(iso8601TimeFormat)
@@ -256,10 +244,10 @@ func GetTransactions(c *gin.Context) {
 	}
 	accessTokens, err := models.GetAccessTokens(email.(string))
 	if err != nil {
-		renderError(c, err)
+		panic(err)
 	}
 
-	var transactions []transaction
+	var transactions []models.Transaction
 
 	for _, accessToken := range accessTokens {
 		request := plaid.NewTransactionsGetRequest(
@@ -287,7 +275,7 @@ func GetTransactions(c *gin.Context) {
 				merchant = *t.MerchantName.Get()
 			}
 
-			tx := transaction{
+			tx := models.Transaction{
 				ID:           t.TransactionId,
 				MerchantName: merchant,
 				Amount:       t.Amount,

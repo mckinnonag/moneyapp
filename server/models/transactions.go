@@ -1,21 +1,36 @@
 package models
 
-import (
-	"time"
-)
-
 type Transaction struct {
-	Amount   float32
-	Category string
-	Date     time.Time
+	ID              string
+	Category        []string
+	Location        string
+	Name            string
+	Amount          float32
+	IsoCurrencyCode string
+	Date            string
+	Pending         bool
+	MerchantName    string
+	PaymentChannel  string
 }
 
-var Transactions = []Transaction{
-	{Amount: 15.32, Category: "Shopping", Date: time.Now()},
-	{Amount: 9.01, Category: "Food", Date: time.Now()},
-	{Amount: 126.00, Category: "Bills", Date: time.Now()},
+func GetAllTransactions(email string) (result []Transaction, err error) {
+	tx := Transaction{
+		ID:           "1",
+		MerchantName: "McDonalds",
+		Amount:       69.420,
+	}
+	result = append(result, tx)
+	return result, nil
 }
 
-func GetAllTransactions(email string) []Transaction {
-	return Transactions
+func UpdateUserTransactions(email string, transactions []Transaction) error {
+	for _, tx := range transactions {
+		sqlStatement := `
+			INSERT INTO transactions (tx_id, plaid_id, user_id, amount, merchant_name)
+			VALUES ($1, $2)`
+		_, err := DB.Exec(sqlStatement, tx.ID, tx.)
+		if err != nil {
+			return err
+		}
+	}
 }
