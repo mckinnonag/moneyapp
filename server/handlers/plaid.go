@@ -13,11 +13,6 @@ import (
 	plaid "github.com/plaid/plaid-go/plaid"
 )
 
-// The transfer_id is only relevant for the Transfer ACH product.
-// We store the transfer_id in memory - in production, store it in a secure
-// persistent data store
-var transferID string
-
 func renderError(c *gin.Context, originalErr error) {
 	if plaidError, err := plaid.ToPlaidError(originalErr); err == nil {
 		// Return 200 and allow the front end to render the error.
@@ -232,7 +227,6 @@ func RemoveAccount(c *gin.Context) {
 }
 
 func GetTransactions(c *gin.Context) {
-
 	const iso8601TimeFormat = "2006-01-02"
 	startDate := time.Now().Add(-365 * 24 * time.Hour).Format(iso8601TimeFormat)
 	endDate := time.Now().Format(iso8601TimeFormat)
@@ -244,7 +238,8 @@ func GetTransactions(c *gin.Context) {
 	}
 	accessTokens, err := models.GetAccessTokens(email.(string))
 	if err != nil {
-		panic(err)
+		c.JSON(500, nil)
+		return
 	}
 
 	var transactions []models.Transaction
@@ -266,7 +261,8 @@ func GetTransactions(c *gin.Context) {
 		res, _, err := common.PlaidClient.PlaidApi.TransactionsGet(ctx).TransactionsGetRequest(*request).Execute()
 
 		if err != nil {
-			log.Println(err)
+			c.JSON(500, nil)
+			return
 		}
 
 		for _, t := range res.Transactions {
