@@ -6,15 +6,14 @@ import (
 )
 
 type SharedTx struct {
-	SharedTxID int64   // Primary key
-	TxID       int64   // Foreign Key (transactions)
+	TxID       string  // Foreign Key (transactions)
 	UserID     string  // Owner
 	SharedWith string  // Recipient
 	Amount     float32 // Amount owed
 }
 
 type Transaction struct {
-	ID              int64
+	ID              string
 	ItemID          string
 	Category        []string
 	Location        string
@@ -51,24 +50,31 @@ func GetSharedTransactions(email string) (result []Transaction, err error) {
 	return result, nil
 }
 
-func ShareTransactions(email string, transactions []Transaction) error {
+func ShareTransaction(email string, tx Transaction, share SharedTx) error {
 	user_id, err := lookupUser(email)
 	if err != nil {
 		return err
 	}
 
-	for _, tx := range transactions {
-		iso_currency_code, err := getCurrencyCode(tx.IsoCurrencyCode)
-		if err != nil {
-			return err
-		}
-		sqlStatement := `
-			INSERT INTO transactions (tx_id, plaid_id, plaid_item_id, user_id, category, location, tx_name, amount, iso_currency_code, tx_date, pending, merchant_name, payment_channel)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
-		_, err = DB.Exec(sqlStatement, tx.ID, tx.ID, tx.ItemID, user_id, tx.Category, tx.Location, tx.Name, tx.Amount, iso_currency_code, tx.Date, tx.Pending, tx.MerchantName, tx.PaymentChannel)
-		if err != nil {
-			return err
-		}
+	iso_currency_code, err := getCurrencyCode(tx.IsoCurrencyCode)
+	if err != nil {
+		return err
 	}
+	sqlStatement := `
+		INSERT INTO transactions (plaid_id, plaid_item_id, user_id, category, location, tx_name, amount, iso_currency_code, tx_date, pending, merchant_name, payment_channel)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
+	_, err = DB.Exec(sqlStatement, tx.ID, tx.ItemID, user_id, tx.Category, tx.Location, tx.Name, tx.Amount, iso_currency_code, tx.Date, tx.Pending, tx.MerchantName, tx.PaymentChannel)
+	if err != nil {
+		return err
+	}
+
+	sqlStatement = `
+		INSERT INTO shared_transactions (tx_id, user_id, shared_with, amount)
+		VALUES ($1, $2, $3, $4)`
+	_, err = DB.Exec(sqlStatement, share.TxID, share.UserID, share.SharedWith, share.Amount)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

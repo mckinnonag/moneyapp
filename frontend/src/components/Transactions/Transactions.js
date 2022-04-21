@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGrid, onSelectionModelChange } from '@mui/x-data-grid';
+import Button from '@mui/material/Button';
 import { useEffect } from 'react';
 
 const columns = [
@@ -25,6 +26,7 @@ const columns = [
 
 const Transactions = () => {
   const [rows, setRows] = useState([]);
+  const [selectedRows, setSelectedRows] = useState([]);
   
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -41,7 +43,11 @@ const Transactions = () => {
     fetchTransactions();
   }, []);
 
-  let txList = rows.map(function(tx, index){
+  function printRows() {
+    console.log(selectedRows);
+  }
+
+  let txList = rows.map(function(tx){
     return {id: tx.ID, 
             merchant: tx.MerchantName, 
             amount: tx.Amount,
@@ -57,72 +63,13 @@ const Transactions = () => {
         pageSize={15}
         rowsPerPageOptions={[15]}
         checkboxSelection
+        onSelectionModelChange={(selectedFile) => {
+          setSelectedRows(selectedFile);
+        }} 
       />
+      <Button variant="outlined" onClick={printRows}>Split selected</Button>
     </div>
   )
 };
 
 export default Transactions;
-
-// export default function Transactions() {
-//   return (
-    // <div style={{ height: 400, width: '100%' }}>
-    //   <DataGrid
-    //     rows={rows}
-    //     columns={columns}
-    //     pageSize={5}
-    //     rowsPerPageOptions={[5]}
-    //     checkboxSelection
-    //   />
-    // </div>
-//   );
-// }
-
-
-// class Transactions extends Component {
-//     constructor(props) {
-//         super(props)
-//         this.state = {
-//             transactions: [
-//                 {id: 1, vendor: 'Test1', amount: 41.0, date: "1/21/22"},
-//                 {id: 2, vendor: 'Test2', amount: 14.50, date: "1/22/22"}
-//             ]
-//         }
-//     }
-
-//     renderTableData() {
-//         return this.state.transactions.map((transaction, index) => {
-//             const {id, vendor, amount, date} = transaction
-//             return (
-//                 <tr key={id}>
-//                     <td>{id}</td>
-//                     <td>{vendor}</td>
-//                     <td>${amount}</td>
-//                     <td>{date}</td>
-//                 </tr>
-//             )
-//         })
-//     }
-
-//     renderTableHeader() {
-//         let header = Object.keys(this.state.transactions[0])
-//         return header.map((key, index) => {
-//             return <th key={index}>{key.toUpperCase()}  </th>
-//         })
-//     }
-
-//     render() {
-//         return (
-//             <>
-//                 <table id='transactions'>
-//                     <tbody>
-//                         <th>{this.renderTableHeader()}</th>
-//                         {this.renderTableData()}
-//                     </tbody>
-//                 </table>
-//             </>
-//         )
-//     }
-// }
-
-// export default Transactions

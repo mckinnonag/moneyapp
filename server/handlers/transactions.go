@@ -8,7 +8,7 @@ import (
 
 func GetSharedTransactions(c *gin.Context) {
 	email, _ := c.Get("email")
-	transactions, err := models.GetAllTransactions(email.(string))
+	transactions, err := models.GetSharedTransactions(email.(string))
 
 	if err != nil {
 		c.JSON(500, nil)
@@ -18,4 +18,8 @@ func GetSharedTransactions(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"transactions": transactions,
 	})
+}
+
+func ShareTransaction(c *gin.Context) {
+
 }
