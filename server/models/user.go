@@ -49,7 +49,7 @@ func RegisterNewUser(username, password string) error {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 8)
 	if err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 
 	sqlStatement := `
@@ -57,7 +57,7 @@ func RegisterNewUser(username, password string) error {
 	VALUES ($1, $2)`
 	_, err = DB.Exec(sqlStatement, username, hashedPassword)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	return nil

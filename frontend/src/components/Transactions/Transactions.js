@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DataGrid, onSelectionModelChange } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 import Button from '@mui/material/Button';
 import { useEffect } from 'react';
 
@@ -13,15 +13,6 @@ const columns = [
   },
   { field: 'merchant', headerName: 'Merchant', width: 300 },
   { field: 'date', headerName: 'Date', width: 120},
-//   {
-//     field: 'fullName',
-//     headerName: 'Full name',
-//     description: 'This column has a value getter and is not sortable.',
-//     sortable: false,
-//     width: 160,
-//     valueGetter: (params) =>
-//       `${params.row.firstName || ''} ${params.row.lastName || ''}`,
-//   },
 ];
 
 const Transactions = () => {
@@ -44,7 +35,16 @@ const Transactions = () => {
   }, []);
 
   function printRows() {
-    console.log(selectedRows);
+    // To be replaced - this function is being used to test interactions with rows in the datagrid.
+    let sharedTransactions = [];
+    for (let i = 0; i < selectedRows.length; i++) {
+      const tx = rows.filter(row => row.ID === selectedRows[i]);
+      const friend = 'test_friend';
+      sharedTransactions.push({
+        transaction: tx,
+        friend: friend,
+      })
+    }
   }
 
   let txList = rows.map(function(tx){
