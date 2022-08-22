@@ -1,20 +1,21 @@
 import React from 'react';
-import './App.css';
 import { BrowserRouter, Route, Routes, useLocation, Navigate } from 'react-router-dom';
+import Layout from '../Layout/Layout';
 import Dashboard from '../Dashboard/Dashboard';
 import Login from '../Login/Login'
+import Credentials from '../Auth/authInterfaces';
 import Preferences from '../Preferences/Preferences';
-import Accounts from '../Accounts/Accounts.js'
-import Friends from '../Friends/Friends.js'
+import Accounts from '../Accounts/Accounts.js';
+import Friends from '../Friends/Friends.js';
 import Transactions from '../Transactions/Transactions';
 import Register from '../Register/Register';
-import Nav from '../Nav/Nav.js'
-import ErrorBoundary from '../ErrorBoundary/ErrorBoundary'
-import { useAuth, AuthProvider } from '../Auth/Auth'
+import Nav from '../Nav/Nav';
+import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
+import { useAuth, AuthProvider } from '../Auth/Auth';
 
 function App() {
-  
   return (
+    <Layout>
       <AuthProvider>
         <BrowserRouter>
           <ConditionalNav></ConditionalNav>
@@ -33,14 +34,17 @@ function App() {
           </ErrorBoundary>
         </BrowserRouter>
       </AuthProvider>
+    </Layout>
   );
 }
 
+// @ts-ignore
 function RequireAuth({ children }) {
   let auth = useAuth();
   let location = useLocation();
 
-  if (!auth.user) {
+  // @ts-ignore
+  if (auth.email == '') {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -49,7 +53,8 @@ function RequireAuth({ children }) {
 
 function ConditionalNav() {
   let auth = useAuth();
-  return auth.user && <Nav></Nav>
+  // @ts-ignore
+  return auth.email && <Nav></Nav>
 }
 
 export default App;

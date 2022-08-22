@@ -1,3 +1,22 @@
+<<<<<<< HEAD
+=======
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+>>>>>>> d81648665e93df17c660b4f7fa85bdf6c10d4862
 .DS_STORE
 node_modules
 scripts/flow/*/.flowconfig
@@ -36,6 +55,7 @@ packages/react-devtools-extensions/.tempUserDataDir
 packages/react-devtools-inline/dist
 packages/react-devtools-shell/dist
 packages/react-devtools-timeline/dist
+<<<<<<< HEAD
 
 # If you prefer the allow list template instead of the deny list, see community template:
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
@@ -58,3 +78,5 @@ packages/react-devtools-timeline/dist
 
 # Go workspace file
 go.work
+=======
+>>>>>>> d81648665e93df17c660b4f7fa85bdf6c10d4862
