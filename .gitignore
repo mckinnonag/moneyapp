@@ -80,3 +80,6 @@ packages/react-devtools-timeline/dist
 go.work
 =======
 >>>>>>> d81648665e93df17c660b4f7fa85bdf6c10d4862
+
+# Firebase
+frontend/src/firebase.ts
