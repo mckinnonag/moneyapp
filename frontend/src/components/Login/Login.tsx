@@ -21,7 +21,7 @@ export default function Login() {
   // const [password, setPassword] = useState();
   //  // @ts-ignore
   // const { login } = useAuth();
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   // const location = useLocation();
 
   // // Redirect from browser history if the user was redirected here
@@ -35,23 +35,28 @@ export default function Login() {
   //     email: data.get('email'), 
   //     password: data.get('password')
   //   }, () => {
-  //     navigate(from, { replace: true });
+      // navigate(from, { replace: true });
   //   });
   // };
 
   const signIn = (e: React.FormEvent<HTMLFormElement>) => {
-      const data = new FormData(e.currentTarget);
-      signInWithEmailAndPassword(
-        Auth,
-        data.get('email') as string, 
-        data.get('password') as string,
-      )
-      .then((userCredential) => {
-        // Signed in 
-        const user = userCredential.user;
-        // ...
-      })
-      .catch((error) => {
+    e.preventDefault();
+    
+    // Redirect from browser history if the user was redirected here
+    const from = '/';
+
+    // Data from login form
+    const data = new FormData(e.currentTarget);
+    signInWithEmailAndPassword(
+      Auth,
+      data.get('email') as string, 
+      data.get('password') as string,
+    )
+    .then((userCredential) => {
+      // Signed in 
+      navigate(from, { replace: true });
+    })
+    .catch((error) => {
       console.error(error);
     });
   };

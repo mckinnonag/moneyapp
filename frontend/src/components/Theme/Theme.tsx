@@ -29,10 +29,10 @@ const getDesignTokens = () => ({
     },
     palette: {
         primary: {
-        main: '#455a64',
+        main: '#006064',
         },
         secondary: {
-        main: '#ef5350',
+        main: '#ffd54f',
         },
         background: {
         default: '#fafafa',
