@@ -28,7 +28,6 @@ function Layout (props: any) {
       <ThemeProvider theme={theme}>
         <CssBaseline/>
         <GlobalStyles styles={{ }}/>
-        {/* <ConditionalNav/> */}
         <main>
             <Box
                 sx={{

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useContext } from 'react';
 import { BrowserRouter, Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import Layout from '../Layout/Layout';
 import Dashboard from '../Dashboard/Dashboard';
@@ -12,16 +12,32 @@ import Register from '../Register/Register';
 import Nav from '../Nav/Nav';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
 import { useAuth, AuthProvider } from '../Auth/Auth';
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 function App() {
+  const [user, setUser] = useState<string | null>(null);
+
+  const auth = getAuth();
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is signed in, see docs for a list of available properties
+      // https://firebase.google.com/docs/reference/js/firebase.User
+      const email = user.email;
+      setUser(email);
+      // ...
+    } else {
+      // User is signed out
+      // ...
+    }
+  });
+
   return (
-    <Layout>
+    // <Layout>
       <AuthProvider>
-        <BrowserRouter>
-          <ConditionalNav></ConditionalNav>
+        <BrowserRouter basename="/">
           <ErrorBoundary>
             <Routes>
-              <Route path="/" element={<h1>Placeholder homepage</h1>} />
+              <Route path="/" element={<h1>Hi, { user }</h1>} />
               <Route path="*" element={<Login />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -34,7 +50,7 @@ function App() {
           </ErrorBoundary>
         </BrowserRouter>
       </AuthProvider>
-    </Layout>
+    // </Layout>
   );
 }
 

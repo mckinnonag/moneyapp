@@ -13,28 +13,46 @@ import Box from '@mui/material/Box';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-import useAuth from '../Auth/Auth';
+import { Auth } from '../../firebase';
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function Login() {
-  const [username, setUserName] = useState();
-  const [password, setPassword] = useState();
-   // @ts-ignore
-  const { login } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  // const [username, setUserName] = useState();
+  // const [password, setPassword] = useState();
+  //  // @ts-ignore
+  // const { login } = useAuth();
+  // const navigate = useNavigate();
+  // const location = useLocation();
 
-  // Redirect from browser history if the user was redirected here
-  const from = '/';
+  // // Redirect from browser history if the user was redirected here
+  // const from = '/';
   
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    login({
-      email: data.get('email'), 
-      password: data.get('password')
-    }, () => {
-      navigate(from, { replace: true });
+  // const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  //   event.preventDefault();
+  //   const data = new FormData(event.currentTarget);
+  //   login({
+  //     email: data.get('email'), 
+  //     password: data.get('password')
+  //   }, () => {
+  //     navigate(from, { replace: true });
+  //   });
+  // };
+
+  const signIn = (e: React.FormEvent<HTMLFormElement>) => {
+      const data = new FormData(e.currentTarget);
+      signInWithEmailAndPassword(
+        Auth,
+        data.get('email') as string, 
+        data.get('password') as string,
+      )
+      .then((userCredential) => {
+        // Signed in 
+        const user = userCredential.user;
+        // ...
+      })
+      .catch((error) => {
+      console.error(error);
     });
   };
 
@@ -55,7 +73,7 @@ export default function Login() {
         <Typography component="h1" variant="h5">
           Sign in
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+        <Box component="form" onSubmit={signIn} noValidate sx={{ mt: 1 }}>
           <TextField
             margin="normal"
             required
