@@ -10,18 +10,19 @@ import Friends from '../Friends/Friends';
 import Transactions from '../Transactions/Transactions';
 import Register from '../Auth/Register';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
+import Test from '../Test/TestAPI';
 import { AuthProvider } from '../Auth/Auth';
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 
 function App() {
-  const [user, setUser] = useState<string | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
 
   const auth = getAuth();
   onAuthStateChanged(auth, (user) => {
     if (user) {
       // User is signed in
-      const uid = user.uid;
-      setUser(uid);
+      const u = user;
+      setUser(u);
     } else {
       // User is signed out
       setUser(null);
@@ -48,6 +49,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
                 <Route path="*" element={<Login />} />
+                <Route path="/test" element={<Test />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/logout" element={<Logout />} />
                 <Route path="/register" element={<Register />} />

@@ -39,8 +39,9 @@ func initRoutes() (r *gin.Engine) {
 	{
 		public := api.Group("/public")
 		{
-			public.POST("/login", handlers.Login)
-			public.POST("/register", handlers.Register)
+			// public.POST("/login", handlers.Login)
+			// public.POST("/register", handlers.Register)
+			public.POST("/test", handlers.Test)
 		}
 		private := api.Group("/private").Use(middleware.Authz())
 		{
@@ -56,6 +57,7 @@ func initRoutes() (r *gin.Engine) {
 }
 
 func main() {
+	// DB
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s",
 		common.DATABASE_URL, common.DATABASE_PORT, common.DATABASE_USER, common.DATABASE_PW, common.DATABASE_NAME)
@@ -71,8 +73,12 @@ func main() {
 		log.Fatal("unable to ping database")
 	}
 
+	// DB Migration
 	var migrationDir = flag.String("migration.files", "../db/migration", "Directory where the migration files are located ?")
 	driver, err := postgres.WithInstance(models.DB, &postgres.Config{})
+	if err != nil {
+		panic(err)
+	}
 	file := "000001_init_schema.up.sql://../db/migration"
 	m, err := migrate.NewWithDatabaseInstance(
 		fmt.Sprintf("file://%s", *migrationDir),
@@ -86,6 +92,10 @@ func main() {
 
 	log.Println("Database Migrated!")
 
+	// Firebase
+	// fbase := auth.InitializeAppDefault()
+
+	// Handlers
 	r := initRoutes()
 
 	err = r.Run(":" + common.APP_PORT)
