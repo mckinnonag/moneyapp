@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useState } from 'react';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -7,10 +8,13 @@ import Box from '@mui/material/Box';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
+import Alert from '@mui/material/Alert';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { Auth } from '../../firebase';
 
-function register(e: React.FormEvent<HTMLFormElement>) {
+export default function Register() {
+  // Firebase logic
+  function register(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     createUserWithEmailAndPassword(
@@ -24,15 +28,58 @@ function register(e: React.FormEvent<HTMLFormElement>) {
         // ...
       })
       .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log(errorCode);
-        console.log(errorMessage);
-        // ..
+        console.log('Error in registration. Try again with a different username or password.')
       });
-}
+  }
 
-export default function Register() {
+  // Verify form fields
+  const [input, setInput] = useState({
+    email: '',
+    password: '',
+    retypepassword: ''
+  });
+ 
+  const [error, setError] = useState('');
+ 
+  const onInputChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
+    ) => {
+    const { name, value } = e.currentTarget;
+    setInput(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    validateInput(e);
+  }
+ 
+  const validateInput = (
+    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
+    ) => {
+    const { name, value } = e.currentTarget;   
+      switch (name) {
+        case "email":
+          if (!value) {
+            setError("Please enter your email.");
+          }
+          break;
+   
+        case "password":
+          if (!value) {
+            setError("Please enter your password.");
+          }
+          break;
+
+        case "retypepassword":
+          if (!value) {
+            setError("Passwords don't match.");
+          }
+          break;
+   
+        default:
+          break;
+      }
+    };
+
   return (
     <Container component="main" maxWidth="xs">
       <CssBaseline />
@@ -60,6 +107,8 @@ export default function Register() {
             name="email"
             autoComplete="email"
             autoFocus
+            onChange={onInputChange}
+            onBlur={validateInput}
           />
           <TextField
             margin="normal"
@@ -70,6 +119,8 @@ export default function Register() {
             type="password"
             id="password"
             autoComplete="current-password"
+            onChange={onInputChange}
+            onBlur={validateInput}
           />
           <TextField
             margin="normal"
@@ -80,7 +131,10 @@ export default function Register() {
             type="password"
             id="retypepassword"
             autoComplete="current-password"
+            onChange={onInputChange}
+            onBlur={validateInput}
           />
+          { error && <Alert severity="error">{error}</Alert> }
           <Button
             type="submit"
             fullWidth

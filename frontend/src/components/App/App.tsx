@@ -8,7 +8,7 @@ import Preferences from '../Preferences/Preferences';
 import Accounts from '../Accounts/Accounts';
 import Friends from '../Friends/Friends';
 import Transactions from '../Transactions/Transactions';
-import Register from '../Register/Register';
+import Register from '../Auth/Register';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
 import { AuthProvider } from '../Auth/Auth';
 import { getAuth, onAuthStateChanged } from "firebase/auth";

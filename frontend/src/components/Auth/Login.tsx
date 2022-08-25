@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
@@ -15,29 +14,51 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { Auth } from '../../firebase';
 import { signInWithEmailAndPassword } from "firebase/auth";
+import Alert from '@mui/material/Alert';
 
 export default function Login() {
-  // const [username, setUserName] = useState();
-  // const [password, setPassword] = useState();
-  //  // @ts-ignore
-  // const { login } = useAuth();
-  const navigate = useNavigate();
-  // const location = useLocation();
-
-  // // Redirect from browser history if the user was redirected here
-  // const from = '/';
+  // Verify form fields
+  const [input, setInput] = useState({
+    email: '',
+    password: '',
+  });
+ 
+  const [error, setError] = useState('');
+ 
+  const onInputChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
+    ) => {
+    const { name, value } = e.currentTarget;
+    setInput(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    validateInput(e);
+  }
+ 
+  const validateInput = (
+    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
+    ) => {
+    const { name, value } = e.currentTarget;   
+      switch (name) {
+        case "email":
+          if (!value) {
+            setError("Please enter your email.");
+          }
+          break;
+   
+        case "password":
+          if (!value) {
+            setError("Please enter your password.");
+          }
+          break;
+   
+        default:
+          break;
+      }
+    };
   
-
-  // const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-  //   event.preventDefault();
-  //   const data = new FormData(event.currentTarget);
-  //   login({
-  //     email: data.get('email'), 
-  //     password: data.get('password')
-  //   }, () => {
-      // navigate(from, { replace: true });
-  //   });
-  // };
+  const navigate = useNavigate();
 
   const signIn = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -57,7 +78,7 @@ export default function Login() {
       navigate(from, { replace: true });
     })
     .catch((error) => {
-      console.error(error);
+      setError('Invalid username or password');
     });
   };
 
@@ -87,6 +108,8 @@ export default function Login() {
             name="email"
             autoComplete="email"
             autoFocus
+            onChange={onInputChange}
+            onBlur={validateInput}
           />
           <TextField
             margin="normal"
@@ -97,7 +120,10 @@ export default function Login() {
             type="password"
             id="password"
             autoComplete="current-password"
+            onChange={onInputChange}
+            onBlur={validateInput}
           />
+          { error && <Alert severity="error">{error}</Alert> }
           <FormControlLabel
             control={<Checkbox value="remember" color="primary" />}
             label="Remember me"
