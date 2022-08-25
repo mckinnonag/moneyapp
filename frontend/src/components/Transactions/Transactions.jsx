@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
 import { useEffect } from 'react';
 
 const columns = [
@@ -56,7 +57,18 @@ const Transactions = () => {
   });
 
   return(
-    <div style={{ height: 600, width: '100%' }}>
+    <Box
+        component="main"
+        sx={{
+        backgroundColor: (theme) =>
+            theme.palette.mode === 'light'
+            ? theme.palette.grey[100]
+            : theme.palette.grey[900],
+        flexGrow: 1,
+        height: '100vh',
+        overflow: 'auto',
+        }}
+    >
       <DataGrid
         rows={ txList }
         columns={columns}
@@ -68,7 +80,7 @@ const Transactions = () => {
         }} 
       />
       <Button variant="outlined" onClick={printRows}>Split selected</Button>
-    </div>
+    </Box>
   )
 };
 

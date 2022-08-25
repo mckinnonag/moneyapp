@@ -7,6 +7,7 @@ import Nav from '../Nav/Nav';
 import Theme from '../Theme/Theme';
 import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
+import Toolbar from '@mui/material/Toolbar';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 const theme = Theme;
@@ -47,10 +48,11 @@ function Layout (props: any) {
       <CssBaseline/>
       <GlobalStyles styles={{ }}/>
       <main>
-        {/* { user && <Nav /> } */}
-        <Nav>
+        { user && <Nav /> }
+        <Toolbar/>
+        <Box sx={{ display: 'flex' }}>
           {props.children}
-        </Nav>
+        </Box>
       </main>
       {/* Footer */}
       <Box sx={{ bgcolor: 'background.paper', p: 6 }} component="footer">

@@ -1,15 +1,16 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import Layout from '../Layout/Layout';
 import Dashboard from '../Dashboard/Dashboard';
-import Login from '../Login/Login'
+import Login from '../Auth/Login';
+import Logout from '../Auth/Logout';
 import Preferences from '../Preferences/Preferences';
-import Accounts from '../Accounts/Accounts.js';
-import Friends from '../Friends/Friends.js';
+import Accounts from '../Accounts/Accounts';
+import Friends from '../Friends/Friends';
 import Transactions from '../Transactions/Transactions';
 import Register from '../Register/Register';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
-import { useAuth, AuthProvider } from '../Auth/Auth';
+import { AuthProvider } from '../Auth/Auth';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 function App() {
@@ -18,11 +19,9 @@ function App() {
   const auth = getAuth();
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      // User is signed in, see docs for a list of available properties
-      // https://firebase.google.com/docs/reference/js/firebase.User
-      const email = user.email;
-      setUser(email);
-      // ...
+      // User is signed in
+      const uid = user.uid;
+      setUser(uid);
     } else {
       // User is signed out
       setUser(null);
@@ -32,10 +31,8 @@ function App() {
   // Redirect user to login page if not logged in
   // @ts-ignore
   function RequireAuth({ children }) {
-    let auth = useAuth();
     let location = useLocation();
 
-    // @ts-ignore
     if (!user) {
       return <Navigate to="/login" state={{ from: location }} replace />;
     }
@@ -44,15 +41,15 @@ function App() {
   }
 
   return (
-    
       <AuthProvider>
         <BrowserRouter basename="/">
           <ErrorBoundary>
             <Layout>
               <Routes>
-                <Route path="/" element={<h1>Hi, { user }</h1>} />
+                <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
                 <Route path="*" element={<Login />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/logout" element={<Logout />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
                 <Route path="/preferences" element={<RequireAuth><Preferences /></RequireAuth>} />

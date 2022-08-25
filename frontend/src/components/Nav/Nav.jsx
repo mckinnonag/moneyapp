@@ -78,160 +78,151 @@ const Nav = (props) => {
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
-        <AppBar position="absolute" open={open}>
-            <Container maxWidth="xl">
-                <Toolbar disableGutters>
-                <Typography
-                    variant="h6"
-                    noWrap
-                    component="div"
-                    sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}
-                >
-                    LOGO
-                </Typography>
+    <>
+      <AppBar position="absolute" open={open}>
+          <Container maxWidth="xl">
+              <Toolbar 
+                disableGutters
+                sx={{
+                  pr: '24px', // keep right padding when drawer closed
+                }}  
+              >
+              <Typography
+                  variant="h6"
+                  noWrap
+                  component="div"
+                  sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}
+              >
+                  LOGO
+              </Typography>
 
-                <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
-                    <IconButton
-                    size="large"
-                    aria-label="account of current user"
-                    aria-controls="menu-appbar"
-                    aria-haspopup="true"
-                    onClick={handleOpenNavMenu}
-                    color="inherit"
-                    >
-                    <MenuIcon />
-                    </IconButton>
-                    <Menu
-                    id="menu-appbar"
-                    anchorEl={anchorElNav}
-                    anchorOrigin={{
-                        vertical: 'bottom',
-                        horizontal: 'left',
-                    }}
-                    keepMounted
-                    transformOrigin={{
-                        vertical: 'top',
-                        horizontal: 'left',
-                    }}
-                    open={Boolean(anchorElNav)}
-                    onClose={handleCloseNavMenu}
-                    sx={{
-                        display: { xs: 'block', md: 'none' },
-                    }}
-                    >
-                    {pages.map((page) => (
-                        <MenuItem 
-                        key={page} 
-                        onClick={() => {
-                            setAnchorElNav(null);
-                            navigate(`/${page}`)
-                        }}
-                        >{page}</MenuItem>
-                    ))}
-                    </Menu>
-                </Box>
-                <Typography
-                    variant="h6"
-                    noWrap
-                    component="div"
-                    sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}
-                >
-                    LOGO
-                </Typography>
-                <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-                    {pages.map((page) => (
-                    <Button
-                        key={page}
-                        onClick={() => {
-                        setAnchorElNav(null);
-                        navigate(`/${page}`);
-                        }}
-                        sx={{ my: 2, color: 'white', display: 'block' }}
-                    >{page}</Button>
-                    ))}
-                </Box>
+              <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
+                  <IconButton
+                  size="large"
+                  aria-label="account of current user"
+                  aria-controls="menu-appbar"
+                  aria-haspopup="true"
+                  onClick={handleOpenNavMenu}
+                  color="inherit"
+                  >
+                  <MenuIcon />
+                  </IconButton>
+                  <Menu
+                  id="menu-appbar"
+                  anchorEl={anchorElNav}
+                  anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'left',
+                  }}
+                  keepMounted
+                  transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'left',
+                  }}
+                  open={Boolean(anchorElNav)}
+                  onClose={handleCloseNavMenu}
+                  sx={{
+                      display: { xs: 'block', md: 'none' },
+                  }}
+                  >
+                  {pages.map((page) => (
+                      <MenuItem 
+                      key={page} 
+                      onClick={() => {
+                          setAnchorElNav(null);
+                          navigate(`/${page}`)
+                      }}
+                      >{page}</MenuItem>
+                  ))}
+                  </Menu>
+              </Box>
+              <Typography
+                  variant="h6"
+                  noWrap
+                  component="div"
+                  sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}
+              >
+                  LOGO
+              </Typography>
+              <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+                  {pages.map((page) => (
+                  <Button
+                      key={page}
+                      onClick={() => {
+                      setAnchorElNav(null);
+                      navigate(`/${page}`);
+                      }}
+                      sx={{ my: 2, color: 'white', display: 'block' }}
+                  >{page}</Button>
+                  ))}
+              </Box>
 
-                <Box sx={{ flexGrow: 0 }}>
-                    <IconButton 
-                    color="inherit"
-                    sx={{ pr: 2 }}
-                    >
-                    <Badge badgeContent={4} color="secondary">
-                        <NotificationsIcon />
-                    </Badge>
-                    </IconButton>
-                    <Tooltip title="Open settings">
-                    <IconButton 
-                        onClick={handleOpenUserMenu} 
-                        sx={{ pl: 2 }}>
-                        <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
-                    </IconButton>
-                    </Tooltip>
-                    <Menu
-                    sx={{ mt: '45px' }}
-                    id="menu-appbar"
-                    anchorEl={anchorElUser}
-                    anchorOrigin={{
-                        vertical: 'top',
-                        horizontal: 'right',
-                    }}
-                    keepMounted
-                    transformOrigin={{
-                        vertical: 'top',
-                        horizontal: 'right',
-                    }}
-                    open={Boolean(anchorElUser)}
-                    onClose={handleCloseUserMenu}
-                    >
-                    {settings.map((setting) => (
-                        <MenuItem key={setting} onClick={() => {
-                            setAnchorElUser(null);
-                            navigate(`/${setting}`);
-                        }}>
-                        <Typography textAlign="center">{setting}</Typography>
-                        </MenuItem>
-                    ))}
-                    </Menu>
-                </Box>
-                </Toolbar>
-            </Container>
-        </AppBar>
-        <Drawer variant="permanent" open={open}>
-          <Toolbar
+              <Box sx={{ flexGrow: 0 }}>
+                  <IconButton 
+                  color="inherit"
+                  sx={{ pr: 2 }}
+                  >
+                  <Badge badgeContent={4} color="secondary">
+                      <NotificationsIcon />
+                  </Badge>
+                  </IconButton>
+                  <Tooltip title="Open settings">
+                  <IconButton 
+                      onClick={handleOpenUserMenu} 
+                      sx={{ pl: 2 }}>
+                      <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                  </IconButton>
+                  </Tooltip>
+                  <Menu
+                  sx={{ mt: '45px' }}
+                  id="menu-appbar"
+                  anchorEl={anchorElUser}
+                  anchorOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                  }}
+                  keepMounted
+                  transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                  }}
+                  open={Boolean(anchorElUser)}
+                  onClose={handleCloseUserMenu}
+                  >
+                  {settings.map((setting) => (
+                      <MenuItem key={setting} onClick={() => {
+                          setAnchorElUser(null);
+                          navigate(`/${setting}`);
+                      }}>
+                      <Typography textAlign="center">{setting}</Typography>
+                      </MenuItem>
+                  ))}
+                  </Menu>
+              </Box>
+              </Toolbar>
+          </Container>
+      </AppBar>
+      {/* <Drawer variant="permanent" open={open}>
+        <Toolbar
           sx={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'flex-end',
               px: [1],
           }}
-          >
-          <IconButton onClick={toggleDrawer}>
-              <ChevronLeftIcon />
-          </IconButton>
-          </Toolbar>
-          <Divider />
-          <List component="nav">
-          {mainListItems}
-          <Divider sx={{ my: 1 }} />
-          {secondaryListItems}
-          </List>
-        </Drawer>
-        <Box
-          component="main"
-          sx={{
-          backgroundColor: (theme) =>
-              theme.palette.mode === 'light'
-              ? theme.palette.grey[100]
-              : theme.palette.grey[900],
-          flexGrow: 1,
-          height: '100vh',
-          overflow: 'auto',
-          }}
         >
-            { props.children }
-        </Box>
-    </Box>
+        <IconButton onClick={toggleDrawer}>
+            <ChevronLeftIcon />
+        </IconButton>
+        </Toolbar>
+        <Divider />
+        <List component="nav">
+        {mainListItems}
+        <Divider sx={{ my: 1 }} />
+        {secondaryListItems}
+        </List>
+      </Drawer> */}
+    </>
   );
 };
 
