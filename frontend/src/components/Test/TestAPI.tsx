@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Button from '@mui/material/Button';
-import { AuthProvider } from '../Auth/Auth';
 import { getAuth, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 
 export default function Test() {
@@ -20,14 +19,13 @@ export default function Test() {
 
     async function test() {
         user?.getIdToken().then((token) => {
-            fetch('http://localhost:8080/api/public/test', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 
-                token: token,
-                })
+            fetch('http://localhost:8080/api/private/test', 
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `${token}`
+                },
             })
         })
         
@@ -40,6 +38,7 @@ export default function Test() {
                 test
             }
         >
-            Test!</Button>
+            Test!
+        </Button>
     )
 }

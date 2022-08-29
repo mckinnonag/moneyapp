@@ -1,49 +1,70 @@
 import React, { useState } from "react";
-
-import PlaidLink from '../PlaidLink/PlaidLink.js'
+import PlaidLink from '../PlaidLink/PlaidLink'
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 
 const Accounts = () => {
   const [accounts, setAccounts] = useState([]);
+  const [user, setUser] = useState<FirebaseUser | null>(null);  // JWT Token
+
+  const auth = getAuth();
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is signed in
+      const u = user;
+      setUser(u);
+    } else {
+      // User is signed out
+      setUser(null);
+    }
+  });
 
   React.useEffect(() => {
     fetchAccounts();
   }, []);
 
   const fetchAccounts = async () => {
-    const jwtToken = JSON.parse(sessionStorage.getItem('token'))['token'];
-    const requestOptions = {
+    user?.getIdToken().then((token) => {
+      fetch('http://localhost:8080/api/private/accounts', 
+      {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` },
-    };
-    const response = await fetch('http://localhost:8080/api/private/accounts', requestOptions);
-    const accts = await response.json()
-    setAccounts(accts.accounts);
-  };
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${token}` 
+        },
+      }
+      ).then((accts) => {
+        // @ts-ignore
+        setAccounts(accts.accounts);
+      })
+  })};
 
   let cardsList = accounts.map(function(acct, index){
-    return  <Card key={ index } sx={{ 
-                                      minWidth: 275,
-                                      width: 500,
-                                      margin: "auto",
-                                      "margin-top": 20,
-                                    }}>
+    return  <Card 
+                key={ index } 
+                sx={{ 
+                    minWidth: 275,
+                    width: 500,
+                    margin: "auto",
+                    "margin-top": 20,
+                }}
+            >
               <CardContent>
                 <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-                    {acct.OfficialName}
+                    {/* {acct.OfficialName} */}
                 </Typography>
                 <Typography variant="h5" component="div">
-                    {acct.Name}
+                    {/* {acct.Name} */}
                 </Typography>
                 <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                    Balance: ${acct.BalanceAvailable}
+                    {/* Balance: ${acct.BalanceAvailable} */}
                 </Typography>
                 <Typography variant="body2">
-                    {acct.Type}
+                    {/* {acct.Type} */}
                 </Typography>
               </CardContent>
               <CardActions>

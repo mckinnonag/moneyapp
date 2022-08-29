@@ -29,7 +29,7 @@ func VerifyIDToken(ctx context.Context, idToken string) *auth.Token {
 		log.Fatalf("error verifying ID token: %v\n", err)
 	}
 
-	log.Printf("Verified ID token: %v\n", token)
+	// log.Printf("Verified ID token: %v\n", token)
 
 	return token
 }

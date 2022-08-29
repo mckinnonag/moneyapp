@@ -2,8 +2,6 @@ package middleware
 
 import (
 	"server/auth"
-	"server/common"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,29 +16,25 @@ func Authz() gin.HandlerFunc {
 			return
 		}
 
-		extractedToken := strings.Split(clientToken, "Bearer ")
+		// extractedToken := strings.Split(clientToken, "Bearer ")
 
-		if len(extractedToken) == 2 {
-			clientToken = strings.TrimSpace(extractedToken[1])
-		} else {
-			c.JSON(400, "Incorrect Format of Authorization Token")
+		// if len(extractedToken) == 2 {
+		// 	clientToken = strings.TrimSpace(extractedToken[1])
+		// } else {
+		// 	c.JSON(400, "Incorrect Format of Authorization Token")
+		// 	c.Abort()
+		// 	return
+		// }
+
+		bearerToken := c.Request.Header.Get("Authorization")
+		token := auth.VerifyIDToken(c, bearerToken)
+		if token == nil {
+			c.JSON(400, "")
 			c.Abort()
 			return
 		}
 
-		jwtConfig := auth.JwtConfig{
-			SecretKey: common.JWT_SECRET,
-			Issuer:    common.JWT_ISSUER,
-		}
-
-		claims, err := jwtConfig.ValidateToken(clientToken)
-		if err != nil {
-			c.JSON(401, err.Error())
-			c.Abort()
-			return
-		}
-
-		c.Set("email", claims.Email)
+		// c.Set("email", token.)
 
 		c.Next()
 

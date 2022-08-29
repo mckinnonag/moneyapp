@@ -1,17 +1,15 @@
 package handlers
 
 import (
-	"log"
-
-	"server/auth"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
 
-type LoginPayload struct {
-	User     string `json:"username"` //binding:"required"`
-	Password string `json:"password"` //binding:"required"`
-}
+// type LoginPayload struct {
+// 	User     string `json:"username"` //binding:"required"`
+// 	Password string `json:"password"` //binding:"required"`
+// }
 
 // func Register(c *gin.Context) {
 // 	var creds LoginPayload
@@ -90,22 +88,8 @@ type LoginPayload struct {
 // 	}
 // }
 
-func Profile(c *gin.Context) {
-	// email, _ := c.Get("email")
-	panic("not implemented")
-}
-
-type testPayload struct {
-	Token string `json:"token"`
-}
-
 func Test(c *gin.Context) {
-	var t testPayload
-	err := c.BindJSON(&t)
-	if err != nil {
-		log.Printf("error unmarshalling json: %v\n", err)
-	}
-	token := auth.VerifyIDToken(c, t.Token)
-
-	log.Printf("Verified ID token: %v\n", token)
+	// bearerToken := c.Request.Header.Get("Authorization")
+	// auth.VerifyIDToken(c, bearerToken) // returns token
+	fmt.Println("success!")
 }
