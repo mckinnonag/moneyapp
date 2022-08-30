@@ -1,12 +1,13 @@
 package middleware
 
 import (
+	"fmt"
 	"server/auth"
 
 	"github.com/gin-gonic/gin"
 )
 
-// Authz validates token and authorizes users
+// Authz validates token via Firebase and authorizes users
 func Authz() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientToken := c.Request.Header.Get("Authorization")
@@ -16,27 +17,23 @@ func Authz() gin.HandlerFunc {
 			return
 		}
 
-		// extractedToken := strings.Split(clientToken, "Bearer ")
-
-		// if len(extractedToken) == 2 {
-		// 	clientToken = strings.TrimSpace(extractedToken[1])
-		// } else {
-		// 	c.JSON(400, "Incorrect Format of Authorization Token")
-		// 	c.Abort()
-		// 	return
-		// }
-
 		bearerToken := c.Request.Header.Get("Authorization")
-		token := auth.VerifyIDToken(c, bearerToken)
-		if token == nil {
-			c.JSON(400, "")
-			c.Abort()
-			return
+		_, err := auth.VerifyIDToken(c, bearerToken)
+		if err != nil {
+			if err.Error() == "illegal base64 data at input byte 6; see https://firebase.google.com/docs/auth/admin/verify-id-tokens for details on how to retrieve a valid ID token" {
+				c.JSON(401, "Invalid authorization header.")
+				c.Abort()
+				return
+			} else {
+				c.JSON(400, "")
+				fmt.Println(err.Error())
+				c.Abort()
+				return
+			}
 		}
 
 		// c.Set("email", token.)
 
 		c.Next()
-
 	}
 }

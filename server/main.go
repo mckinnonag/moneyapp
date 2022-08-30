@@ -37,11 +37,11 @@ func initRoutes() (r *gin.Engine) {
 
 	api := r.Group("/api")
 	{
-		// public := api.Group("/public")
+		public := api.Group("/public")
 		{
 			// public.POST("/login", handlers.Login)
 			// public.POST("/register", handlers.Register)
-			// public.POST("/test", handlers.Test)
+			public.POST("/test", handlers.Test)
 		}
 		private := api.Group("/private").Use(middleware.Authz())
 		// private := api.Group("/private")

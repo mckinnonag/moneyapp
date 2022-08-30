@@ -89,7 +89,5 @@ import (
 // }
 
 func Test(c *gin.Context) {
-	// bearerToken := c.Request.Header.Get("Authorization")
-	// auth.VerifyIDToken(c, bearerToken) // returns token
 	fmt.Println("success!")
 }

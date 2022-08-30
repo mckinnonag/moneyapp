@@ -1,28 +1,37 @@
 package middleware
 
 import (
-	"authapp/auth"
-	"authapp/controllers"
-	"authapp/database"
-	"authapp/models"
-	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"server/auth"
+	"server/handlers"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		fmt.Println("Error when loading environment variables from .env file %w", err)
+	}
+}
 
 func TestAuthzNoHeader(t *testing.T) {
 	router := gin.Default()
 	router.Use(Authz())
 
-	router.GET("/api/private/transactions")
+	uri := "/api/private/transactions"
 
+	router.GET(uri, handlers.GetTransactions)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/protected/profile", nil)
+	req, _ := http.NewRequest("GET", uri, nil)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, 403, w.Code)
@@ -32,10 +41,12 @@ func TestAuthzInvalidTokenFormat(t *testing.T) {
 	router := gin.Default()
 	router.Use(Authz())
 
-	router.GET("/api/protected/profile", controllers.Profile)
+	uri := "/api/private/transactions"
+
+	router.GET(uri, handlers.GetTransactions)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/protected/profile", nil)
+	req, _ := http.NewRequest("GET", uri, nil)
 	req.Header.Add("Authorization", "test")
 
 	router.ServeHTTP(w, req)
@@ -48,10 +59,12 @@ func TestAuthzInvalidToken(t *testing.T) {
 	router := gin.Default()
 	router.Use(Authz())
 
-	router.GET("/api/protected/profile", controllers.Profile)
+	uri := "/api/private/transactions"
+
+	router.GET(uri, nil)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/protected/profile", nil)
+	req, _ := http.NewRequest("GET", uri, nil)
 	req.Header.Add("Authorization", invalidToken)
 
 	router.ServeHTTP(w, req)
@@ -59,53 +72,51 @@ func TestAuthzInvalidToken(t *testing.T) {
 	assert.Equal(t, 401, w.Code)
 }
 
+// Generates a random password for testing purposes
+func randomPassword(length int) string {
+	rand.Seed(time.Now().UnixNano())
+	b := make([]byte, length)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)[:length]
+}
+
 func TestValidToken(t *testing.T) {
-	var response models.User
-
-	err := database.InitDatabase()
-	assert.NoError(t, err)
-
-	err = database.GlobalDB.AutoMigrate(&models.User{})
-	assert.NoError(t, err)
-
-	user := models.User{
-		Email:    "test@email.com",
-		Password: "secret",
-		Name:     "Test User",
-	}
-
-	jwtWrapper := auth.JwtWrapper{
-		SecretKey:       "verysecretkey",
-		Issuer:          "AuthService",
-		ExpirationHours: 24,
-	}
-
-	token, err := jwtWrapper.GenerateToken(user.Email)
-	assert.NoError(t, err)
-
-	err = user.HashPassword(user.Password)
-	assert.NoError(t, err)
-
-	result := database.GlobalDB.Create(&user)
-	assert.NoError(t, result.Error)
-
 	router := gin.Default()
 	router.Use(Authz())
 
-	router.GET("/api/protected/profile", controllers.Profile)
+	uri := "/api/private/test"
+
+	router.GET(uri, handlers.Test)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/protected/profile", nil)
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	c, _ := gin.CreateTestContext(w)
+
+	// Generate random password
+	password := randomPassword(16)
+
+	// Create test firebase user
+	user, err := auth.CreateUser(c, "user@example.com", password, "Test User")
+	assert.NoError(t, err)
+
+	// Generate token
+	token, err := auth.CreateCustomToken(c, user.UID)
+	assert.NoError(t, err)
+
+	// Exchange custom token for ID token
+	idToken, err := auth.ExchangeCustomTokenForIDToken(token, os.Getenv("FIREBASE_API_KEY"))
+	assert.NoError(t, err)
+
+	// Send request
+	req, err := http.NewRequest("GET", uri, nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", idToken)
 
 	router.ServeHTTP(w, req)
-
-	err = json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
 	assert.Equal(t, 200, w.Code)
-	assert.Equal(t, "test@email.com", response.Email)
-	assert.Equal(t, "Test User", response.Name)
 
-	database.GlobalDB.Unscoped().Where("email = ?", user.Email).Delete(&models.User{})
+	// Remove user
+	err = auth.DeleteUser(c, user.UID)
+	assert.NoError(t, err)
 }
