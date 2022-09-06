@@ -78,7 +78,7 @@ const PlaidLink = () => {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                'Authorization': `${await jwtToken}`
+                'Authorization': `${jwtToken}`
               },
               body: `public_token=${public_token}`,
             });
@@ -95,7 +95,7 @@ const PlaidLink = () => {
             //   },
             // });                
           } 
-  )};
+    )};
       setToken();
       window.history.pushState("", "", "/");
     },
