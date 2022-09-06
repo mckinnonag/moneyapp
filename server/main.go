@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"server/common"
 	handlers "server/handlers"
 	"server/middleware"
@@ -15,10 +16,23 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
+var (
+	APP_PORT string
+)
+
 func init() {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Error when loading environment variables from .env file %w", err)
+	}
+	APP_PORT = os.Getenv("APP_PORT")
+	if APP_PORT == "" {
+		APP_PORT = "8000"
+	}
 	common.Init()
 }
 
@@ -42,10 +56,8 @@ func initRoutes() (r *gin.Engine) {
 			// public.POST("/login", handlers.Login)
 			// public.POST("/register", handlers.Register)
 			public.POST("/test", handlers.Test)
-			public.POST("/linktoken", handlers.CreateLinkToken)
 		}
 		private := api.Group("/private").Use(middleware.Authz())
-		// private := api.Group("/private")
 		{
 			private.POST("/test", handlers.Test)
 			private.POST("/linktoken", handlers.CreateLinkToken)
@@ -97,7 +109,7 @@ func main() {
 	// Handlers
 	r := initRoutes()
 
-	err = r.Run(":" + common.APP_PORT)
+	err = r.Run(":" + APP_PORT)
 	if err != nil {
 		panic(err)
 	}

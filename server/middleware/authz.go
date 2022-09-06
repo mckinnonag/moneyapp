@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"fmt"
+	"log"
 	"server/auth"
 
 	"github.com/gin-gonic/gin"
@@ -26,14 +26,11 @@ func Authz() gin.HandlerFunc {
 				return
 			} else {
 				c.JSON(400, "")
-				fmt.Println(err.Error())
+				log.Println(err.Error())
 				c.Abort()
 				return
 			}
 		}
-
-		// c.Set("email", token.)
-
 		c.Next()
 	}
 }

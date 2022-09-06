@@ -7,34 +7,16 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
-	plaid "github.com/plaid/plaid-go/plaid"
 )
 
 var (
-	PLAID_CLIENT_ID     string
-	PLAID_SECRET        string
-	PLAID_ENV           string
-	PLAID_PRODUCTS      string
-	PLAID_COUNTRY_CODES string
-	PLAID_REDIRECT_URI  string
-	APP_PORT            string
-	JWT_SECRET          string
-	JWT_ISSUER          string
-	DATABASE_URL        string
-	DATABASE_PORT       int
-	DATABASE_USER       string
-	DATABASE_NAME       string
-	DATABASE_PW         string
-	DATABASE_SSL        string
-	JWT_EXPIRY          int64
-	PlaidClient         *plaid.APIClient = nil
+	DATABASE_URL  string
+	DATABASE_PORT int
+	DATABASE_USER string
+	DATABASE_NAME string
+	DATABASE_PW   string
+	DATABASE_SSL  string
 )
-
-var environments = map[string]plaid.Environment{
-	"sandbox":     plaid.Sandbox,
-	"development": plaid.Development,
-	"production":  plaid.Production,
-}
 
 func Init() {
 	err := godotenv.Load()
@@ -57,57 +39,4 @@ func Init() {
 	if DATABASE_SSL == "" {
 		DATABASE_SSL = "disable"
 	}
-
-	JWT_SECRET = os.Getenv("JWT_SECRET")
-	JWT_ISSUER = os.Getenv("JWT_ISSUER")
-	exp, _ := strconv.ParseInt(os.Getenv("JWT_EXPIRY"), 10, 64)
-	JWT_EXPIRY = exp
-	if JWT_SECRET == "" {
-		JWT_SECRET = "verysecretkey"
-	}
-	if JWT_ISSUER == "" {
-		JWT_ISSUER = "Issuer"
-	}
-	if JWT_EXPIRY == 0 {
-		JWT_EXPIRY = 1
-	}
-
-	PLAID_CLIENT_ID = os.Getenv("PLAID_CLIENT_ID")
-	PLAID_SECRET = os.Getenv("PLAID_SECRET")
-
-	if PLAID_CLIENT_ID == "" || PLAID_SECRET == "" {
-		log.Fatal("Error: PLAID_SECRET or PLAID_CLIENT_ID is not set.")
-	}
-
-	PLAID_ENV = os.Getenv("PLAID_ENV")
-	PLAID_PRODUCTS = os.Getenv("PLAID_PRODUCTS")
-	PLAID_COUNTRY_CODES = os.Getenv("PLAID_COUNTRY_CODES")
-	PLAID_REDIRECT_URI = os.Getenv("PLAID_REDIRECT_URI")
-	APP_PORT = os.Getenv("APP_PORT")
-
-	if PLAID_PRODUCTS == "" {
-		PLAID_PRODUCTS = "transactions"
-	}
-	if PLAID_COUNTRY_CODES == "" {
-		PLAID_COUNTRY_CODES = "US"
-	}
-	if PLAID_ENV == "" {
-		PLAID_ENV = "sandbox"
-	}
-	if APP_PORT == "" {
-		APP_PORT = "8000"
-	}
-	if PLAID_CLIENT_ID == "" {
-		log.Fatal("PLAID_CLIENT_ID is not set.")
-	}
-	if PLAID_SECRET == "" {
-		log.Fatal("PLAID_SECRET is not set.")
-	}
-
-	// create Plaid client
-	configuration := plaid.NewConfiguration()
-	configuration.AddDefaultHeader("PLAID-CLIENT-ID", PLAID_CLIENT_ID)
-	configuration.AddDefaultHeader("PLAID-SECRET", PLAID_SECRET)
-	configuration.UseEnvironment(environments[PLAID_ENV])
-	PlaidClient = plaid.NewAPIClient(configuration)
 }

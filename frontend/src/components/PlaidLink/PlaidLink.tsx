@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
@@ -23,13 +23,14 @@ const PlaidLink = () => {
   // Generate link token from server when component mounts
   const generateToken = useCallback(
     async () => {
-      const jwtToken = user?.getIdToken();
-      const response = await fetch('http://localhost:8080/api/private/linktoken',
+      await user?.getIdToken()
+        .then(async function(jwtToken) {
+          const response = await fetch('http://localhost:8080/api/private/linktoken',
         {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json', 
-                'Authorization': `${await jwtToken}` 
+                'Authorization': `${jwtToken}` 
             },
         }
       )
@@ -47,7 +48,7 @@ const PlaidLink = () => {
         setLinkToken(data.link_token);
       }
       localStorage.setItem("link_token", data.link_token); //to use later for Oauth
-      // });
+        })
     },
     []
   );
@@ -67,33 +68,34 @@ const PlaidLink = () => {
   }, [generateToken]);
 
   // Send the generated link public token to the server
-  const onSuccess = React.useCallback(
+  const onSuccess = useCallback(
     (public_token: string) => {
       // send public_token to server
       const setToken = async () => {
-        const jwtToken = user?.getIdToken();
-        const response = await fetch("http://localhost:8080/api/private/accesstoken", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            'Authorization': `${await jwtToken}`
-          },
-          body: `public_token=${public_token}`,
-        });
-        if (!response.ok) {
-          return;
-        }
-        const data = await response.json();
-        console.log(data.access_token);
-        // dispatch({
-        //   type: "SET_STATE",
-        //   state: {
-        //     itemId: data.item_id,
-        //     accessToken: data.access_token,
-        //     isItemAccess: true,
-        //   },
-        // });
-      };
+        user?.getIdToken()
+          .then(async function(jwtToken) {
+            const response = await fetch("http://localhost:8080/api/private/accesstoken", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                'Authorization': `${await jwtToken}`
+              },
+              body: `public_token=${public_token}`,
+            });
+            if (!response.ok) {
+              return;
+            }
+            const data = await response.json();
+            // dispatch({
+            //   type: "SET_STATE",
+            //   state: {
+            //     itemId: data.item_id,
+            //     accessToken: data.access_token,
+            //     isItemAccess: true,
+            //   },
+            // });                
+          } 
+  )};
       setToken();
       window.history.pushState("", "", "/");
     },

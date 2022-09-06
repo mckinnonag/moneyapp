@@ -2,16 +2,76 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
-	common "server/common"
+	"os"
 	"server/models"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	plaid "github.com/plaid/plaid-go/plaid"
 )
+
+var (
+	PLAID_CLIENT_ID     string
+	PLAID_SECRET        string
+	PLAID_ENV           string
+	PLAID_PRODUCTS      string
+	PLAID_COUNTRY_CODES string
+	PLAID_REDIRECT_URI  string
+	PlaidClient         *plaid.APIClient = nil
+)
+
+var environments = map[string]plaid.Environment{
+	"sandbox":     plaid.Sandbox,
+	"development": plaid.Development,
+	"production":  plaid.Production,
+}
+
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Error when loading environment variables from .env file %w", err)
+	}
+
+	PLAID_CLIENT_ID = os.Getenv("PLAID_CLIENT_ID")
+	PLAID_SECRET = os.Getenv("PLAID_SECRET")
+
+	if PLAID_CLIENT_ID == "" || PLAID_SECRET == "" {
+		log.Fatal("Error: PLAID_SECRET or PLAID_CLIENT_ID is not set.")
+	}
+
+	PLAID_ENV = os.Getenv("PLAID_ENV")
+	PLAID_PRODUCTS = os.Getenv("PLAID_PRODUCTS")
+	PLAID_COUNTRY_CODES = os.Getenv("PLAID_COUNTRY_CODES")
+	PLAID_REDIRECT_URI = os.Getenv("PLAID_REDIRECT_URI")
+
+	if PLAID_PRODUCTS == "" {
+		PLAID_PRODUCTS = "transactions"
+	}
+	if PLAID_COUNTRY_CODES == "" {
+		PLAID_COUNTRY_CODES = "US"
+	}
+	if PLAID_ENV == "" {
+		PLAID_ENV = "sandbox"
+	}
+	if PLAID_CLIENT_ID == "" {
+		log.Fatal("PLAID_CLIENT_ID is not set.")
+	}
+	if PLAID_SECRET == "" {
+		log.Fatal("PLAID_SECRET is not set.")
+	}
+
+	// create Plaid client
+	configuration := plaid.NewConfiguration()
+	configuration.AddDefaultHeader("PLAID-CLIENT-ID", PLAID_CLIENT_ID)
+	configuration.AddDefaultHeader("PLAID-SECRET", PLAID_SECRET)
+	configuration.UseEnvironment(environments[PLAID_ENV])
+	PlaidClient = plaid.NewAPIClient(configuration)
+}
 
 func renderError(c *gin.Context, originalErr error) {
 	if plaidError, err := plaid.ToPlaidError(originalErr); err == nil {
@@ -47,9 +107,9 @@ func linkTokenCreate(
 	paymentInitiation *plaid.LinkTokenCreateRequestPaymentInitiation,
 ) (string, error) {
 	ctx := context.Background()
-	countryCodes := convertCountryCodes(strings.Split(common.PLAID_COUNTRY_CODES, ","))
-	products := convertProducts(strings.Split(common.PLAID_PRODUCTS, ","))
-	redirectURI := common.PLAID_REDIRECT_URI
+	countryCodes := convertCountryCodes(strings.Split(PLAID_COUNTRY_CODES, ","))
+	products := convertProducts(strings.Split(PLAID_PRODUCTS, ","))
+	redirectURI := PLAID_REDIRECT_URI
 
 	user := plaid.LinkTokenCreateRequestUser{
 		ClientUserId: time.Now().String(),
@@ -72,7 +132,7 @@ func linkTokenCreate(
 		request.SetPaymentInitiation(*paymentInitiation)
 	}
 
-	linkTokenCreateResp, _, err := common.PlaidClient.PlaidApi.LinkTokenCreate(ctx).LinkTokenCreateRequest(*request).Execute()
+	linkTokenCreateResp, _, err := PlaidClient.PlaidApi.LinkTokenCreate(ctx).LinkTokenCreateRequest(*request).Execute()
 
 	if err != nil {
 		return "", err
@@ -86,7 +146,7 @@ func getAccessToken(c *gin.Context, publicToken string) {
 	ctx := context.Background()
 
 	// exchange the public_token for an access_token
-	exchangePublicTokenResp, _, err := common.PlaidClient.PlaidApi.ItemPublicTokenExchange(ctx).ItemPublicTokenExchangeRequest(
+	exchangePublicTokenResp, _, err := PlaidClient.PlaidApi.ItemPublicTokenExchange(ctx).ItemPublicTokenExchangeRequest(
 		*plaid.NewItemPublicTokenExchangeRequest(publicToken),
 	).Execute()
 	if err != nil {
@@ -171,7 +231,7 @@ func GetAccounts(c *gin.Context) {
 		// accountsGetRequest.SetOptions(plaid.AccountsGetRequestOptions{
 		// 	AccountIds: &[]string{},
 		// })
-		accountsGetResp, _, _ := common.PlaidClient.PlaidApi.AccountsGet(ctx).AccountsGetRequest(
+		accountsGetResp, _, _ := PlaidClient.PlaidApi.AccountsGet(ctx).AccountsGetRequest(
 			*accountsGetRequest,
 		).Execute()
 		response := accountsGetResp.GetAccounts()
@@ -219,7 +279,7 @@ func RemoveAccount(c *gin.Context) {
 
 	for _, accessToken := range accessTokens {
 		request := plaid.NewItemRemoveRequest(accessToken)
-		_, _, err = common.PlaidClient.PlaidApi.ItemRemove(ctx).ItemRemoveRequest(*request).Execute()
+		_, _, err = PlaidClient.PlaidApi.ItemRemove(ctx).ItemRemoveRequest(*request).Execute()
 		if err != nil {
 			log.Println(err)
 		}
@@ -258,7 +318,7 @@ func GetTransactions(c *gin.Context) {
 
 		request.SetOptions(options)
 
-		res, _, err := common.PlaidClient.PlaidApi.TransactionsGet(ctx).TransactionsGetRequest(*request).Execute()
+		res, _, err := PlaidClient.PlaidApi.TransactionsGet(ctx).TransactionsGetRequest(*request).Execute()
 
 		if err != nil {
 			c.JSON(500, nil)
