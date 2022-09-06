@@ -16,7 +16,7 @@ import (
 func renderError(c *gin.Context, originalErr error) {
 	if plaidError, err := plaid.ToPlaidError(originalErr); err == nil {
 		// Return 200 and allow the front end to render the error.
-		c.JSON(http.StatusOK, gin.H{"error": plaidError})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": plaidError})
 		return
 	}
 

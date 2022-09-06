@@ -42,6 +42,7 @@ func initRoutes() (r *gin.Engine) {
 			// public.POST("/login", handlers.Login)
 			// public.POST("/register", handlers.Register)
 			public.POST("/test", handlers.Test)
+			public.POST("/linktoken", handlers.CreateLinkToken)
 		}
 		private := api.Group("/private").Use(middleware.Authz())
 		// private := api.Group("/private")

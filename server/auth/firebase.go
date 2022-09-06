@@ -33,8 +33,6 @@ func VerifyIDToken(ctx context.Context, idToken string) (*auth.Token, error) {
 		return nil, err
 	}
 
-	// log.Printf("Verified ID token: %v\n", token)
-
 	return token, nil
 }
 
