@@ -48,8 +48,8 @@ func init() {
 
 	// Initialize DB
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s",
-		DATABASE_URL, DATABASE_PORT, DATABASE_USER, DATABASE_PW, DATABASE_NAME)
+		"password=%s dbname=%s sslmode=%s",
+		DATABASE_URL, DATABASE_PORT, DATABASE_USER, DATABASE_PW, DATABASE_NAME, DATABASE_SSL)
 
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
@@ -62,12 +62,12 @@ func init() {
 	}
 
 	// DB Migration
-	var migrationDir = flag.String("migration.files", "../db/migration", "Directory where the migration files are located ?")
+	var migrationDir = flag.String("migration.files", "../db/migrations", "Directory where the migration files are located ?")
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
 		log.Fatal(err)
 	}
-	file := "000001_init_schema.up.sql://../db/migration"
+	file := "000003_remove_users_table.up.sql://../db/migrations"
 	m, err := migrate.NewWithDatabaseInstance(
 		fmt.Sprintf("file://%s", *migrationDir),
 		file, driver)
