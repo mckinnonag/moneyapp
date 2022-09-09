@@ -50,12 +50,7 @@ func GetSharedTransactions(email string) (result []Transaction, err error) {
 	return result, nil
 }
 
-func ShareTransaction(email string, tx Transaction, share SharedTx) error {
-	user_id, err := lookupUser(email)
-	if err != nil {
-		return err
-	}
-
+func ShareTransaction(uid string, tx Transaction, share SharedTx) error {
 	iso_currency_code, err := getCurrencyCode(tx.IsoCurrencyCode)
 	if err != nil {
 		return err
@@ -63,7 +58,7 @@ func ShareTransaction(email string, tx Transaction, share SharedTx) error {
 	sqlStatement := `
 		INSERT INTO transactions (plaid_id, plaid_item_id, user_id, category, location, tx_name, amount, iso_currency_code, tx_date, pending, merchant_name, payment_channel)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
-	_, err = DB.Exec(sqlStatement, tx.ID, tx.ItemID, user_id, tx.Category, tx.Location, tx.Name, tx.Amount, iso_currency_code, tx.Date, tx.Pending, tx.MerchantName, tx.PaymentChannel)
+	_, err = DB.Exec(sqlStatement, tx.ID, tx.ItemID, uid, tx.Category, tx.Location, tx.Name, tx.Amount, iso_currency_code, tx.Date, tx.Pending, tx.MerchantName, tx.PaymentChannel)
 	if err != nil {
 		return err
 	}

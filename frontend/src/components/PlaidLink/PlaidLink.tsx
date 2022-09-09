@@ -50,7 +50,7 @@ const PlaidLink = () => {
       localStorage.setItem("link_token", data.link_token); //to use later for Oauth
         })
     },
-    []
+    [user]
   );
 
   useEffect(() => {

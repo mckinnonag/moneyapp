@@ -24,7 +24,7 @@ var (
 	DATABASE_SSL  string
 )
 
-func init() {
+func ConnectDB() *sql.DB {
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Println("Error when loading environment variables from .env file %w", err)
@@ -55,14 +55,19 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	return db
+}
+
+func init() {
+	db := ConnectDB()
 	defer db.Close()
 
-	if err = db.Ping(); err != nil {
+	if err := db.Ping(); err != nil {
 		log.Fatal("unable to ping database")
 	}
 
 	// DB Migration
-	var migrationDir = flag.String("migration.files", "../db/migrations", "Directory where the migration files are located ?")
+	var migrationDir = flag.String("migration.files", "./migrations", "Directory where the migration files are located ?")
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
 		log.Fatal(err)

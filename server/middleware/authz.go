@@ -18,7 +18,7 @@ func Authz() gin.HandlerFunc {
 		}
 
 		bearerToken := c.Request.Header.Get("Authorization")
-		_, err := auth.VerifyIDToken(c, bearerToken)
+		token, err := auth.VerifyIDToken(c, bearerToken)
 		if err != nil {
 			if err.Error() == "illegal base64 data at input byte 6; see https://firebase.google.com/docs/auth/admin/verify-id-tokens for details on how to retrieve a valid ID token" {
 				c.JSON(401, "Invalid authorization header.")
@@ -31,6 +31,7 @@ func Authz() gin.HandlerFunc {
 				return
 			}
 		}
+		c.Set("uid", token.Claims["user_id"])
 		c.Next()
 	}
 }

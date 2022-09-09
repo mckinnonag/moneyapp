@@ -142,7 +142,7 @@ func linkTokenCreate(
 }
 
 func getAccessToken(c *gin.Context, publicToken string) {
-	email, _ := c.Get("email")
+	uid, _ := c.Get("uid")
 	ctx := context.Background()
 
 	// exchange the public_token for an access_token
@@ -157,7 +157,7 @@ func getAccessToken(c *gin.Context, publicToken string) {
 	accessToken := exchangePublicTokenResp.GetAccessToken()
 	itemID := exchangePublicTokenResp.GetItemId()
 
-	err = models.SetAccessToken(email.(string), accessToken, itemID)
+	err = models.SetAccessToken(uid.(string), accessToken, itemID)
 	if err != nil {
 		renderError(c, err)
 		return
@@ -180,7 +180,7 @@ func CreateLinkToken(c *gin.Context) {
 
 func CreateAccessToken(c *gin.Context) {
 	type TOKEN struct {
-		Token string `json:"token" binding: "required"`
+		Token string `json:"token"`
 	}
 	var token TOKEN
 	err := c.BindJSON(&token)
