@@ -4,7 +4,7 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import { useEffect } from 'react';
 import { getAuth, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
-import { getTransactions } from './getTransactions';
+import { getTransactions } from '../../api/getTransactions';
 
 const columns = [
   {

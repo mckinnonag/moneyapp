@@ -1,3 +1,6 @@
+//go:build integration
+// +build integration
+
 package middleware
 
 import (
@@ -29,7 +32,7 @@ func TestAuthzNoHeader(t *testing.T) {
 
 	uri := "/api/private/transactions"
 
-	router.GET(uri, handlers.GetTransactions)
+	router.GET(uri, handlers.GetPlaidTransactions)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", uri, nil)
 	router.ServeHTTP(w, req)
@@ -43,7 +46,7 @@ func TestAuthzInvalidTokenFormat(t *testing.T) {
 
 	uri := "/api/private/transactions"
 
-	router.GET(uri, handlers.GetTransactions)
+	router.GET(uri, handlers.GetPlaidTransactions)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", uri, nil)

@@ -16,7 +16,7 @@ This is still a work in progress!
 6. Copy the .json file to the main directory.
 
 ### Test
-       cd ./server && go test -v
+* Come back soon - currently working on integration Go's test suite with Docker.
 
 ### Run
 
