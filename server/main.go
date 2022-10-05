@@ -53,7 +53,7 @@ func initRoutes() (r *gin.Engine) {
 		{
 			private.POST("/linktoken", handlers.CreateLinkToken)
 			private.POST("/accesstoken", handlers.CreateAccessToken)
-			private.GET("/gettransactions", handlers.GetTransactions)
+			private.GET("/gettransactions", handlers.GetPlaidTransactions)
 			private.GET("/accounts", handlers.GetAccounts)
 			private.POST("/removeaccount", handlers.RemoveAccount)
 		}

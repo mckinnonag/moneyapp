@@ -22,6 +22,7 @@ var (
 	DATABASE_NAME string
 	DATABASE_PW   string
 	DATABASE_SSL  string
+	db            *sql.DB
 )
 
 func ConnectDB() *sql.DB {
@@ -59,7 +60,7 @@ func ConnectDB() *sql.DB {
 }
 
 func init() {
-	db := ConnectDB()
+	db = ConnectDB()
 	defer db.Close()
 
 	if err := db.Ping(); err != nil {

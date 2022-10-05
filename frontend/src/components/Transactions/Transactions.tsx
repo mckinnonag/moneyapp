@@ -77,12 +77,13 @@ const Transactions = () => {
 //     fetchTransactions();
 //   }, []);
 
-//   useEffect(() => {
-//     getTransactions(user)
-//       .then(transactions => {
-//         setRows(transactions)
-//       })
-//   }, [])
+  useEffect(() => {
+    getTransactions(user)
+      .then(transactions => {
+        // @ts-ignore
+        setRows(transactions)
+      })
+  }, [user])
 
   function printRows() {
     // To be replaced - this function is being used to test interactions with rows in the datagrid.
@@ -98,17 +99,17 @@ const Transactions = () => {
     }
   }
 
-  let txList = rows.map(function(tx){
-    // @ts-ignore
-    return {id: tx.ID, 
-        // @ts-ignore
-            merchant: tx.MerchantName, 
-            // @ts-ignore
-            amount: tx.Amount,
-            // @ts-ignore
-            date: tx.Date,
-          };
-  });
+  // let txList = rows.map(function(tx){
+  //   // @ts-ignore
+  //   return {id: tx.ID, 
+  //       // @ts-ignore
+  //           merchant: tx.MerchantName, 
+  //           // @ts-ignore
+  //           amount: tx.Amount,
+  //           // @ts-ignore
+  //           date: tx.Date,
+  //         };
+  // });
 
   return(
     <Box
@@ -123,7 +124,7 @@ const Transactions = () => {
         overflow: 'auto',
         }}
     >
-      <DataGrid
+      {/* <DataGrid
         rows={ txList }
         columns={columns}
         pageSize={15}
@@ -133,7 +134,7 @@ const Transactions = () => {
             // @ts-ignore
           setSelectedRows(selectedFile);
         }} 
-      />
+      /> */}
       <Button variant="outlined" onClick={printRows}>Split selected</Button>
     </Box>
   )

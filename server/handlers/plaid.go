@@ -215,11 +215,12 @@ func GetAccounts(c *gin.Context) {
 
 	// Call the Plaid API to get a list of accounts
 	ctx := context.Background()
-	email, exists := c.Get("email")
+	uid, exists := c.Get("uid")
 	if !exists {
-		log.Println("email doesn't exist")
+		log.Println("uid does not exist")
+		return
 	}
-	accessTokens, err := models.GetAccessTokens(email.(string))
+	accessTokens, err := models.GetAccessTokens(uid.(string))
 	if err != nil {
 		renderError(c, err)
 	}
@@ -268,11 +269,8 @@ func GetAccounts(c *gin.Context) {
 
 func RemoveAccount(c *gin.Context) {
 	ctx := context.Background()
-	email, exists := c.Get("email")
-	if !exists {
-		log.Println("email doesn't exist")
-	}
-	accessTokens, err := models.GetAccessTokens(email.(string))
+	uid, _ := c.Get("uid")
+	accessTokens, err := models.GetAccessTokens(uid.(string))
 	if err != nil {
 		renderError(c, err)
 	}
@@ -286,20 +284,20 @@ func RemoveAccount(c *gin.Context) {
 	}
 }
 
-func GetTransactions(c *gin.Context) {
+func GetPlaidTransactions(c *gin.Context) {
 	const iso8601TimeFormat = "2006-01-02"
 	startDate := time.Now().Add(-365 * 24 * time.Hour).Format(iso8601TimeFormat)
 	endDate := time.Now().Format(iso8601TimeFormat)
 
 	ctx := context.Background()
-	email, exists := c.Get("email")
-	if !exists {
-		log.Println("email doesn't exist")
-	}
-	accessTokens, err := models.GetAccessTokens(email.(string))
+	uid, _ := c.Get("uid")
+	accessTokens, err := models.GetAccessTokens(uid.(string))
 	if err != nil {
 		c.JSON(500, nil)
 		return
+	}
+	if accessTokens == nil {
+		c.JSON(404, "No access token found")
 	}
 
 	var transactions []models.Transaction

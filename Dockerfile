@@ -8,5 +8,4 @@ COPY moneyapp-3615b-firebase-adminsdk-nnqws-3e0b8d838e.json /app
 RUN go mod download
 RUN go build -o /docker-moneyapp
 
-# CMD [ "/docker-moneyapp" ]
-ENTRYPOINT ["go", "test", "-v", "./...", "-coverprofile", "cover.out"]
+CMD [ "/docker-moneyapp" ]
