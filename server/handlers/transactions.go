@@ -7,8 +7,8 @@ import (
 )
 
 func GetSharedTransactions(c *gin.Context) {
-	email, _ := c.Get("email")
-	transactions, err := models.GetSharedTransactions(email.(string))
+	uid, _ := c.Get("uid")
+	transactions, err := models.GetSharedTransactions(uid.(string))
 
 	if err != nil {
 		c.JSON(500, nil)
