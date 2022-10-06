@@ -16,7 +16,7 @@ This is still a work in progress!
 6. Copy the .json file to the main directory.
 
 ### Test
-* Come back soon - currently working on integration Go's test suite with Docker.
+* Come back soon - currently working on this.
 
 ### Run
 
