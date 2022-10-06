@@ -1,4 +1,4 @@
-package handlers
+package api
 
 import (
 	models "server/models"
@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetSharedTransactions(c *gin.Context) {
+func GetTransactions(c *gin.Context) {
 	uid, _ := c.Get("uid")
-	transactions, err := models.GetSharedTransactions(uid.(string))
+	transactions, err := models.GetTransactions(uid.(string))
 
 	if err != nil {
 		c.JSON(500, nil)
@@ -20,6 +20,6 @@ func GetSharedTransactions(c *gin.Context) {
 	})
 }
 
-func ShareTransaction(c *gin.Context) {
+func CreateTransaction(c *gin.Context) {
 
 }

@@ -3,11 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
-	handlers "server/handlers"
-	"server/middleware"
+	"server/models"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
@@ -15,56 +12,39 @@ import (
 )
 
 var (
-	APP_PORT string
+	APP_PORT      string
+	DATABASE_URL  string
+	DATABASE_PORT int
+	DATABASE_USER string
+	DATABASE_NAME string
+	DATABASE_PW   string
+	DATABASE_SSL  string
 )
 
+// Holds the production app config
+type server struct {
+	router *gin.Engine
+	// email  EmailSender
+}
+
 func init() {
+
+}
+
+func main() {
+	// Load environment variables
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Println("Error when loading environment variables from .env file %w", err)
 	}
-	APP_PORT = os.Getenv("APP_PORT")
-	if APP_PORT == "" {
-		APP_PORT = "8000"
+
+	s := &server{}
+	err = models.ConnectDB()
+	if err != nil {
+		log.Fatal(err)
 	}
-}
 
-func initRoutes() (r *gin.Engine) {
-	r = gin.Default()
-
-	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowCredentials = true
-	corsConfig.AllowAllOrigins = true
-	corsConfig.AddAllowHeaders("Authorization")
-	r.Use(cors.New(corsConfig))
-
-	r.GET("/ping", func(c *gin.Context) {
-		c.String(200, "")
-	})
-
-	api := r.Group("/api")
-	{
-		public := api.Group("/public")
-		{
-			public.GET("/test", handlers.Test)
-		}
-		private := api.Group("/private").Use(middleware.Authz())
-		{
-			private.GET("/test", handlers.Test)
-			private.POST("/linktoken", handlers.CreateLinkToken)
-			private.POST("/accesstoken", handlers.CreateAccessToken)
-			private.GET("/gettransactions", handlers.GetPlaidTransactions)
-			private.GET("/accounts", handlers.GetAccounts)
-			private.POST("/removeaccount", handlers.RemoveAccount)
-		}
-	}
-	return r
-}
-
-func main() {
-	r := initRoutes()
-
-	err := r.Run(":" + APP_PORT)
+	err = s.routes()
 	if err != nil {
 		log.Fatal(err)
 	}

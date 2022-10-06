@@ -9,7 +9,7 @@ func SetAccessToken(uid, access_token, plaid_item_id string) error {
 	sqlStatement := `
 	INSERT INTO plaid_items (user_id, access_token, plaid_item_id)
 	VALUES ($1, $2, $3)`
-	_, err := db.Exec(sqlStatement, uid, access_token, plaid_item_id)
+	_, err := s.db.Exec(sqlStatement, uid, access_token, plaid_item_id)
 	if err != nil {
 		return err
 	}
@@ -20,7 +20,7 @@ func GetAccessTokens(uid string) (tokens []string, err error) {
 	var accessToken string
 	var result []string
 	sqlStatement := `SELECT access_token FROM plaid_items WHERE user_id=$1`
-	row := db.QueryRow(sqlStatement, uid)
+	row := s.db.QueryRow(sqlStatement, uid)
 	switch err := row.Scan(&accessToken); err {
 	case sql.ErrNoRows:
 		return nil, errors.New("no results")
