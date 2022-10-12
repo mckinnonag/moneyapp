@@ -4,7 +4,7 @@ services:
     image: postgres:14.1-alpine
     restart: always
     env_file:
-      - ./server/.env
+      - ./backend/.env
     ports:
       - '5432:5432'
     volumes: 
@@ -13,7 +13,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    env_file: ./server/.env
+    env_file: ./backend/.env
     depends_on:
       - db
     networks:
