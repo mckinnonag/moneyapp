@@ -83,11 +83,12 @@ func start(config *PlaidConfig) {
 // PlaidService contains the methods of the Plaid service
 type PlaidService interface {
 	CreateLinkToken(c *gin.Context) (string, error)
+	GetAccessToken(c *gin.Context, a NewAccessTokenRequest) (string, string, error)
 }
 
 // PlaidRepository is what lets our service do db operations without knowing anything about the implementation
 type PlaidRepository interface {
-	// CreatePlaid(NewPlaidRequest) error
+	CreateAccessToken(NewAccessTokenRequest) error
 }
 
 type plaidService struct {
@@ -107,17 +108,13 @@ func (p *plaidService) CreateLinkToken(c *gin.Context) (string, error) {
 	products := convertProducts(strings.Split(plaid_products, ","))
 	redirectURI := plaid_redirect_uri
 
-	// uid, exists := c.Get("uid")
-	// if !exists {
-	// 	return "", errors.New("request context does not contain user id claim")
-	// }
-
-	// user := plaid.LinkTokenCreateRequestUser{
-	// 	ClientUserId: uid.(string),
-	// }
+	uid, exists := c.Get("uid")
+	if !exists {
+		return "", errors.New("request context does not contain user id claim")
+	}
 
 	user := plaid.LinkTokenCreateRequestUser{
-		ClientUserId: "testuid123456",
+		ClientUserId: uid.(string),
 	}
 
 	request := plaid.NewLinkTokenCreateRequest(
@@ -135,14 +132,64 @@ func (p *plaidService) CreateLinkToken(c *gin.Context) (string, error) {
 	linkTokenCreateResp, _, err := client.PlaidApi.LinkTokenCreate(ctx).LinkTokenCreateRequest(*request).Execute()
 
 	if err != nil {
-		plaidErr, e := plaid.ToPlaidError(err)
-		if e != nil {
-			return "", e
-		}
-		return "", errors.New(plaidErr.ErrorMessage)
+		return "", plaidError(err)
 	}
 
 	return linkTokenCreateResp.GetLinkToken(), nil
+}
+
+func (p *plaidService) GetAccessToken(c *gin.Context, a NewAccessTokenRequest) (accessToken, itemID string, err error) {
+	publicToken := a.PublicToken
+	if publicToken == "" {
+		err = errors.New("missing public token")
+		return
+	}
+	ctx := context.Background()
+
+	// exchange the public_token for an access_token
+	exchangePublicTokenResp, _, err := client.PlaidApi.ItemPublicTokenExchange(ctx).ItemPublicTokenExchangeRequest(
+		*plaid.NewItemPublicTokenExchangeRequest(publicToken),
+	).Execute()
+	if err != nil {
+		return
+	}
+
+	a.AccessToken = exchangePublicTokenResp.GetAccessToken()
+	a.ItemId = exchangePublicTokenResp.GetItemId()
+
+	err = p.storage.CreateAccessToken(a)
+	if err != nil {
+		return
+	}
+
+	accessToken = a.AccessToken
+	itemID = a.ItemId
+	return
+}
+
+// Generate a public token for testing (sandbox only)
+func CreatePublicToken() (string, error) {
+	if plaid_env != "sandbox" {
+		return "", errors.New("can only generate a public token for testing")
+	}
+
+	ctx := context.Background()
+	products := convertProducts(strings.Split(plaid_products, ","))
+	institution := "ins_109508"
+
+	// Get a random public token
+	sandboxPublicTokenResp, _, err := client.PlaidApi.SandboxPublicTokenCreate(ctx).SandboxPublicTokenCreateRequest(
+		*plaid.NewSandboxPublicTokenCreateRequest(
+			institution,
+			products,
+		),
+	).Execute()
+
+	if err != nil {
+		return "", err
+	}
+
+	return sandboxPublicTokenResp.GetPublicToken(), nil
 }
 
 // Helper function to convert string to plaid country code
@@ -165,4 +212,13 @@ func convertProducts(productStrs []string) []plaid.Products {
 	}
 
 	return products
+}
+
+// Helper function to extract the error message body
+func plaidError(e error) error {
+	plaidErr, err := plaid.ToPlaidError(e)
+	if e != nil {
+		return err
+	}
+	return errors.New(plaidErr.ErrorMessage)
 }

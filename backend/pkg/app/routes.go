@@ -20,7 +20,8 @@ func (s *Server) Routes() *gin.Engine {
 		// private := v1.Group("/private")
 		{
 			private.POST("/transaction", s.CreateTransaction())
-			private.GET("/get_link_token", s.CreateLinkToken())
+			private.POST("/create_link_token", s.CreateLinkToken())
+			private.POST("/api/set_access_token", s.GetAccessToken())
 			// private.POST("/linktoken", api.CreateLinkToken)
 			// private.POST("/accesstoken", api.CreateAccessToken)
 			// private.GET("/gettransactions", api.GetPlaidTransactions)

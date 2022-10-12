@@ -17,6 +17,18 @@ type NewTransactionRequest struct {
 	SplitAmount     float32  `json:"splitamount"`
 }
 
+type NewAccessTokenRequest struct {
+	UID         string
+	PublicToken string `json:"public_token"`
+	AccessToken string
+	ItemId      string
+}
+
+type NewAccessTokenResponse struct {
+	AccessToken string
+	ItemId      string
+}
+
 // type NewPlaidCreateLinkToken struct {
 // 	Token string `json:"token"`
 // }
