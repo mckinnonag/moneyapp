@@ -18,8 +18,8 @@ func (s *Server) Routes() *gin.Engine {
 		}
 		private := v1.Group("/private").Use(middleware.Authz())
 		{
-			private.GET("/transaction", s.GetTransaction())
-			private.POST("/transaction", s.CreateTransaction())
+			private.GET("/transactions", s.GetTransactions())
+			private.POST("/transactions", s.CreateTransaction())
 			private.POST("/create_link_token", s.CreateLinkToken())
 			private.POST("/set_access_token", s.GetAccessToken())
 			private.GET("/contact", s.GetContact())
