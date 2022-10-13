@@ -22,6 +22,9 @@ func (s *Server) Routes() *gin.Engine {
 			private.POST("/transaction", s.CreateTransaction())
 			private.POST("/create_link_token", s.CreateLinkToken())
 			private.POST("/set_access_token", s.GetAccessToken())
+			private.GET("/contact", s.GetContact())
+			private.POST("/contact", s.SetContact())
+			private.DELETE("/contact", s.DeleteContact())
 		}
 	}
 
