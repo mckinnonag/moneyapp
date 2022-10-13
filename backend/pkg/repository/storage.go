@@ -17,6 +17,7 @@ import (
 type Storage interface {
 	RunMigrations(connectionString string) error
 	CreateTransaction(request api.NewTransactionRequest) error
+	GetTransactions(uid string) ([]api.NewTransactionRequest, error)
 	CreateAccessToken(request api.NewAccessTokenRequest) error
 }
 
@@ -87,6 +88,11 @@ func (s *storage) CreateTransaction(request api.NewTransactionRequest) error {
 	}
 
 	return nil
+}
+
+// Get all of a user's transactions
+func (s *storage) GetTransactions(uid string) ([]api.NewTransactionRequest, error) {
+
 }
 
 // Store a new access token for a user
