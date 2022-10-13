@@ -17,17 +17,11 @@ func (s *Server) Routes() *gin.Engine {
 			public.GET("/status", s.ApiStatus())
 		}
 		private := v1.Group("/private").Use(middleware.Authz())
-		// private := v1.Group("/private")
 		{
+			private.GET("/transaction", s.GetTransaction())
 			private.POST("/transaction", s.CreateTransaction())
 			private.POST("/create_link_token", s.CreateLinkToken())
 			private.POST("/api/set_access_token", s.GetAccessToken())
-			// private.POST("/linktoken", api.CreateLinkToken)
-			// private.POST("/accesstoken", api.CreateAccessToken)
-			// private.GET("/gettransactions", api.GetPlaidTransactions)
-			// private.GET("/getsharedtransactions", api.GetTransactions)
-			// private.GET("/accounts", api.GetAccounts)
-			// private.POST("/removeaccount", api.RemoveAccount)
 		}
 	}
 
