@@ -26,6 +26,8 @@ func init() {
 		fmt.Println("Error when loading environment variables from .env file %w", err)
 	}
 
+	gin.SetMode(gin.TestMode) // Suppress gin's debug warnings
+
 	mockPlaidConfig.APP_NAME = "test runner"
 	mockPlaidConfig.PLAID_CLIENT_ID = os.Getenv("PLAID_CLIENT_ID")
 	mockPlaidConfig.PLAID_SECRET = os.Getenv("PLAID_SECRET")
@@ -38,32 +40,18 @@ func TestCreateLinkToken(t *testing.T) {
 	mockRepo := mockPlaidRepo{}
 	mockPlaidService := api.NewPlaidService(&mockPlaidConfig, &mockRepo)
 
-	tests := []struct {
-		name string
-		want string
-		err  error
-	}{
-		{
-			name: "should create a new linkToken",
-			want: "string",
-			err:  nil,
-		},
-	}
+	t.Run("should create a new linkToken", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Set("uid", "123")
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
-			c.Set("uid", "123")
+		linkToken, err := mockPlaidService.CreateLinkToken(c)
 
-			linkToken, err := mockPlaidService.CreateLinkToken(c)
+		assert.Nil(t, err)
 
-			assert.Nil(t, err)
-
-			expected := 49
-			assert.Lenf(t, linkToken, expected, "expected token with length %d, got %d", expected, len(linkToken))
-		})
-	}
+		expected := 49
+		assert.Lenf(t, linkToken, expected, "expected token with length %d, got %d", expected, len(linkToken))
+	})
 }
 
 func TestGetAccessToken(t *testing.T) {
@@ -73,43 +61,33 @@ func TestGetAccessToken(t *testing.T) {
 	publicToken, err := api.CreatePublicToken()
 	assert.Nil(t, err)
 
-	tests := []struct {
-		name    string
-		request api.NewAccessTokenRequest
-		want    api.NewAccessTokenResponse
-		err     error
-	}{
-		{
-			name: "should create a new access token",
-			request: api.NewAccessTokenRequest{
-				PublicToken: publicToken,
-			},
-			want: api.NewAccessTokenResponse{},
-			err:  nil,
-		},
-		// {
-		// 	name:    "should be rejecting for missing a public token",
-		// 	request: api.NewAccessTokenRequest{},
-		// 	want:    api.NewAccessTokenResponse{},
-		// 	err:     errors.New("missing public token"),
-		// },
-	}
+	t.Run("should create a new access token", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Set("uid", "123")
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
-			c.Set("uid", "123")
+		request := api.NewAccessTokenRequest{
+			PublicToken: publicToken,
+		}
+		accessToken, itemID, err := mockPlaidService.GetAccessToken(c, request)
 
-			accessToken, itemID, err := mockPlaidService.GetAccessToken(c, test.request)
+		assert.Nil(t, err)
 
-			assert.Nil(t, err)
+		expected := 51
+		assert.Lenf(t, accessToken, expected, "expected token with length %d, got %d", expected, len(accessToken))
 
-			expected := 51
-			assert.Lenf(t, accessToken, expected, "expected token with length %d, got %d", expected, len(accessToken))
+		expected = 37
+		assert.Lenf(t, itemID, expected, "expected token with length %d, got %d", expected, len(itemID))
+	})
 
-			expected = 37
-			assert.Lenf(t, itemID, expected, "expected token with length %d, got %d", expected, len(itemID))
-		})
-	}
+	t.Run("require public token", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Set("uid", "123")
+
+		request := api.NewAccessTokenRequest{}
+		_, _, err := mockPlaidService.GetAccessToken(c, request)
+
+		assert.NotNil(t, err)
+	})
 }

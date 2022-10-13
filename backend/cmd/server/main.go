@@ -90,11 +90,11 @@ func run() error {
 	storage := repository.NewStorage(db)
 
 	// Run database migrations
-	// err = storage.RunMigrations(connectionString)
+	err = storage.RunMigrations(connectionString)
 
-	// if err != nil {
-	// 	return err
-	// }
+	if err != nil {
+		return err
+	}
 
 	// Create router dependency
 	APP_PORT = os.Getenv("APP_PORT")

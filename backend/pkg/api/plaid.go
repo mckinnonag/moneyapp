@@ -167,7 +167,7 @@ func (p *plaidService) GetAccessToken(c *gin.Context, a NewAccessTokenRequest) (
 	return
 }
 
-// Generate a public token for testing (sandbox only)
+// Generate a public token for testing (sandbox only). TODO: do not export this
 func CreatePublicToken() (string, error) {
 	if plaid_env != "sandbox" {
 		return "", errors.New("can only generate a public token for testing")

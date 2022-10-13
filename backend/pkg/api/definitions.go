@@ -23,12 +23,3 @@ type NewAccessTokenRequest struct {
 	AccessToken string
 	ItemId      string
 }
-
-type NewAccessTokenResponse struct {
-	AccessToken string
-	ItemId      string
-}
-
-// type NewPlaidCreateLinkToken struct {
-// 	Token string `json:"token"`
-// }
