@@ -16,7 +16,8 @@ This is still a work in progress!
 6. Copy the .json file to the main directory.
 
 ### Test
-* Come back soon - currently working on this.
+
+        cd ./backend && go test ./...
 
 ### Run
 
