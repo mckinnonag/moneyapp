@@ -92,7 +92,7 @@ func (s *storage) CreateTransaction(request api.NewTransactionRequest) error {
 
 // Get all of a user's transactions
 func (s *storage) GetTransactions(uid string) ([]api.NewTransactionRequest, error) {
-
+	return nil, errors.New("not implemented")
 }
 
 // Store a new access token for a user

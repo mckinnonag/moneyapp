@@ -20,6 +20,10 @@ func (m mockTransactionRepo) CreateTransaction(request api.NewTransactionRequest
 	return nil
 }
 
+func (m mockTransactionRepo) GetTransactions(uid string) ([]api.NewTransactionRequest, error) {
+	return nil, errors.New("not implemented")
+}
+
 func TestCreateNewTransaction(t *testing.T) {
 	mockRepo := mockTransactionRepo{}
 	mockTransactionService := api.NewTransactionService(&mockRepo)

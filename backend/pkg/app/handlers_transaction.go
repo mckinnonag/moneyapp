@@ -52,3 +52,20 @@ func (s *Server) CreateTransaction() gin.HandlerFunc {
 		c.JSON(http.StatusOK, response)
 	}
 }
+
+func (s *Server) GetTransactions() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Content-Type", "application/json")
+
+		txs, err := s.transactionService.Get(c)
+		if err != nil {
+			log.Printf("service error: %v", err)
+			c.JSON(http.StatusBadRequest, nil)
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"transactions": txs,
+		})
+	}
+}
