@@ -16,8 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type mockPlaidService struct {
-}
+type mockPlaidService struct{}
 
 func init() {
 	gin.SetMode(gin.TestMode)
@@ -157,7 +156,7 @@ func TestGetPlaidTransactions(t *testing.T) {
 		r := resp["transactions"]
 		assert.Len(t, r, 1)
 
-		// Convert the tx array into a map
+		// Get the first transaction in the array
 		first := r.([]interface{})[0].(map[string]interface{})
 
 		assert.Equal(t, "Test Transaction", first["name"])

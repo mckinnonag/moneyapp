@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS transactions;
+DROP TABLE IF EXISTS friends;
+DROP TABLE IF EXISTS currency_codes;
+DROP TABLE IF EXISTS plaid_items;

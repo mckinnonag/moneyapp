@@ -16,6 +16,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var ACCESS_TOKEN string
+
 type mockPlaidRepo struct{}
 
 func (m mockPlaidRepo) CreateAccessToken(request api.NewAccessTokenRequest) error {
@@ -24,7 +26,7 @@ func (m mockPlaidRepo) CreateAccessToken(request api.NewAccessTokenRequest) erro
 
 func (m mockPlaidRepo) GetAccessTokens(string) ([]string, error) {
 	var ret []string
-	ret = append(ret, "access-sandbox-9e36bd8a-0e8c-4104-a9dc-57492b206415")
+	ret = append(ret, ACCESS_TOKEN)
 	return ret, nil
 }
 
@@ -44,6 +46,7 @@ func init() {
 	mockPlaidConfig.PLAID_REDIRECT_URI = ""
 	mockPlaidConfig.PLAID_ENV = "sandbox"
 	mockPlaidConfig.PLAID_PRODUCTS = "transactions"
+	ACCESS_TOKEN = os.Getenv("PLAID_SANDBOX_ACCESS_TOKEN")
 }
 
 func TestCreateLinkToken(t *testing.T) {

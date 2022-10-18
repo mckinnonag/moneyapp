@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"moneyapp/pkg/api"
 	"path/filepath"
@@ -106,4 +107,21 @@ func (s *storage) CreateAccessToken(request api.NewAccessTokenRequest) error {
 		return err
 	}
 	return nil
+}
+
+// Get all access tokens for a user
+func (s *storage) GetAccessTokens(uid string) ([]string, error) {
+	var accessToken string
+	var result []string
+	sqlStatement := `SELECT access_token FROM plaid_items WHERE user_id=$1`
+	row := s.db.QueryRow(sqlStatement, uid)
+	switch err := row.Scan(&accessToken); err {
+	case sql.ErrNoRows:
+		return nil, fmt.Errorf("no access tokens found for uid %s", uid)
+	case nil:
+		result = append(result, accessToken)
+	default:
+		return nil, err
+	}
+	return result, nil
 }
