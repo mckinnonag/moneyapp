@@ -16,16 +16,21 @@ func (s *Server) Routes() *gin.Engine {
 		{
 			public.GET("/status", s.ApiStatus())
 		}
-		private := v1.Group("/private").Use(middleware.Authz())
+		private := v1.Group("/private")
 		{
 			private.GET("/transactions", s.GetTransactions())
 			private.POST("/transactions", s.CreateTransaction())
-			private.POST("/create_link_token", s.CreateLinkToken())
-			private.POST("/set_access_token", s.GetAccessToken())
 			private.GET("/contact", s.GetContact())
 			private.POST("/contact", s.SetContact())
 			private.DELETE("/contact", s.DeleteContact())
+			plaid := private.Group("/plaid")
+			{
+				plaid.POST("/create_link_token", s.CreateLinkToken())
+				plaid.POST("/set_access_token", s.GetAccessToken())
+				plaid.GET("transactions", s.GetPlaidTransactions())
+			}
 		}
+		private.Use(middleware.Authz())
 	}
 
 	return router

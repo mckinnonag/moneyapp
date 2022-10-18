@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	plaid "github.com/plaid/plaid-go/plaid"
@@ -35,6 +36,30 @@ var environments = map[string]plaid.Environment{
 	"sandbox":     plaid.Sandbox,
 	"development": plaid.Development,
 	"production":  plaid.Production,
+}
+
+// PlaidService contains the methods of the Plaid service
+type PlaidService interface {
+	CreateLinkToken(c *gin.Context) (string, error)
+	GetAccessToken(c *gin.Context, a NewAccessTokenRequest) (string, string, error)
+	GetTransactions(req GetPlaidTransactionsRequest) ([]plaid.Transaction, error)
+}
+
+// PlaidRepository is what lets our service do db operations without knowing anything about the implementation
+type PlaidRepository interface {
+	CreateAccessToken(NewAccessTokenRequest) error
+	GetAccessTokens(string) ([]string, error)
+}
+
+type plaidService struct {
+	storage PlaidRepository
+}
+
+func NewPlaidService(config *PlaidConfig, plaidRepo PlaidRepository) PlaidService {
+	start(config)
+	return &plaidService{
+		storage: plaidRepo,
+	}
 }
 
 // Initializes global variables and plaid client
@@ -78,28 +103,6 @@ func start(config *PlaidConfig) {
 	configuration.AddDefaultHeader("PLAID-SECRET", plaid_secret)
 	configuration.UseEnvironment(environments[plaid_env])
 	client = plaid.NewAPIClient(configuration)
-}
-
-// PlaidService contains the methods of the Plaid service
-type PlaidService interface {
-	CreateLinkToken(c *gin.Context) (string, error)
-	GetAccessToken(c *gin.Context, a NewAccessTokenRequest) (string, string, error)
-}
-
-// PlaidRepository is what lets our service do db operations without knowing anything about the implementation
-type PlaidRepository interface {
-	CreateAccessToken(NewAccessTokenRequest) error
-}
-
-type plaidService struct {
-	storage PlaidRepository
-}
-
-func NewPlaidService(config *PlaidConfig, plaidRepo PlaidRepository) PlaidService {
-	start(config)
-	return &plaidService{
-		storage: plaidRepo,
-	}
 }
 
 func (p *plaidService) CreateLinkToken(c *gin.Context) (string, error) {
@@ -190,6 +193,44 @@ func CreatePublicToken() (string, error) {
 	}
 
 	return sandboxPublicTokenResp.GetPublicToken(), nil
+}
+
+func (p *plaidService) GetTransactions(req GetPlaidTransactionsRequest) ([]plaid.Transaction, error) {
+	const iso8601TimeFormat = "2006-01-02"
+	startDate := time.Now().Add(-365 * 24 * time.Hour).Format(iso8601TimeFormat)
+	endDate := time.Now().Format(iso8601TimeFormat)
+
+	ctx := context.Background()
+
+	accessTokens, err := p.storage.GetAccessTokens(req.UID)
+	if err != nil {
+		return nil, err
+	}
+
+	var ret []plaid.Transaction
+	for _, accessToken := range accessTokens {
+		request := plaid.NewTransactionsGetRequest(
+			accessToken,
+			startDate,
+			endDate,
+		)
+
+		options := plaid.TransactionsGetRequestOptions{
+			Count:  plaid.PtrInt32(100),
+			Offset: plaid.PtrInt32(0),
+		}
+
+		request.SetOptions(options)
+
+		res, _, err := client.PlaidApi.TransactionsGet(ctx).TransactionsGetRequest(*request).Execute()
+
+		if err != nil {
+			return nil, err
+		}
+
+		ret = append(ret, res.Transactions...)
+	}
+	return ret, nil
 }
 
 // Helper function to convert string to plaid country code

@@ -1,3 +1,6 @@
+//go:build integration
+// +build integration
+
 package api_test
 
 import (
@@ -6,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -18,6 +22,12 @@ func (m mockPlaidRepo) CreateAccessToken(request api.NewAccessTokenRequest) erro
 	return nil
 }
 
+func (m mockPlaidRepo) GetAccessTokens(string) ([]string, error) {
+	var ret []string
+	ret = append(ret, "access-sandbox-9e36bd8a-0e8c-4104-a9dc-57492b206415")
+	return ret, nil
+}
+
 var mockPlaidConfig api.PlaidConfig
 
 func init() {
@@ -26,7 +36,7 @@ func init() {
 		fmt.Println("Error when loading environment variables from .env file %w", err)
 	}
 
-	gin.SetMode(gin.TestMode) // Suppress gin's debug warnings
+	gin.SetMode(gin.TestMode)
 
 	mockPlaidConfig.APP_NAME = "test runner"
 	mockPlaidConfig.PLAID_CLIENT_ID = os.Getenv("PLAID_CLIENT_ID")
@@ -89,5 +99,32 @@ func TestGetAccessToken(t *testing.T) {
 		_, _, err := mockPlaidService.GetAccessToken(c, request)
 
 		assert.NotNil(t, err)
+	})
+}
+
+func TestGetTransactions(t *testing.T) {
+	mockRepo := mockPlaidRepo{}
+	mockPlaidService := api.NewPlaidService(&mockPlaidConfig, &mockRepo)
+
+	t.Run("should fetch user's transactions", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Set("uid", "123")
+
+		const iso8601TimeFormat = "2006-01-02"
+		startDate := time.Now().Add(-365 * 24 * time.Hour).Format(iso8601TimeFormat)
+		endDate := time.Now().Format(iso8601TimeFormat)
+
+		request := api.GetPlaidTransactionsRequest{
+			UID:       "123",
+			StartDate: startDate,
+			EndDate:   endDate,
+			Count:     100,
+			Offset:    0,
+		}
+
+		txs, err := mockPlaidService.GetTransactions(request)
+		assert.Nil(t, err)
+		assert.Len(t, txs, 100)
 	})
 }
