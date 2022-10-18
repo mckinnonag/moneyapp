@@ -20,6 +20,7 @@ type Storage interface {
 	CreateTransaction(request api.NewTransactionRequest) error
 	GetTransactions(uid string) ([]api.NewTransactionRequest, error)
 	CreateAccessToken(request api.NewAccessTokenRequest) error
+	GetAccessTokens(uid string) ([]string, error)
 }
 
 type storage struct {
