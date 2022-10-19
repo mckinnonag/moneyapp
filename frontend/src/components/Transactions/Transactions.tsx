@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import { useEffect } from 'react';
 import { getAuth, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 import { getTransactions } from '../../api/getTransactions';
+import { Transaction, ConvertTransaction } from '../../types/transaction';
 
 const columns = [
   {
@@ -14,8 +15,10 @@ const columns = [
     currencySymbol: 'USD',
     width: 70,
   },
-  { field: 'merchant', headerName: 'Merchant', width: 300 },
+  { field: 'merchant_name', headerName: 'Merchant', width: 300 },
+  { field: 'category', headerName: 'Category', width: 300},
   { field: 'date', headerName: 'Date', width: 120},
+  { field: 'shared with', headerName: 'Shared with', width: 200},
 ];
 
 const Transactions = () => {
@@ -36,52 +39,12 @@ const Transactions = () => {
       setUser(null);
     }
   });
-  
-  // useEffect(() => {
-  //   const fetchTransactions = async () => {
-  //     const jwtToken = JSON.parse(sessionStorage.getItem('token'))['token'];
-  //     const requestOptions = {
-  //         method: 'GET',
-  //         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` },
-  //     };
-  //     const response = await fetch('http://localhost:8080/api/private/gettransactions', requestOptions)
-  //     const transactions = await response.json();
-  //     console.log(typeof transactions.transactions);
-  //     setRows(transactions.transactions);
-  //   };
-  //   fetchTransactions();
-  // }, []);
-
-  // Load transaction data from the server
-//   useEffect(() => {
-//     const fetchTransactions = async () => {
-//       user?.getIdToken().then((token) => {
-//         fetch('http://localhost:8080/api/private/gettransactions', 
-//           { 
-//             method: 'GET',
-//             headers: {
-//               'Content-Type': 'application/json'
-//             },
-//             // body: JSON.stringify({ 
-//             //     token: token,
-//             //     })
-//           }).then((response) => {
-//             // @ts-ignore
-//             setRows(response.json().transactions);
-//           })
-//         })
-      
-//     //   const transactions = await response.json();
-//     //   setRows(transactions.transactions);
-//     };
-//     fetchTransactions();
-//   }, []);
 
   useEffect(() => {
     getTransactions(user)
-      .then(transactions => {
-        // @ts-ignore
-        setRows(transactions)
+      .then((data) => {
+        setRows(data.transactions);
+        console.log(data.transactions[0])
       })
   }, [user])
 
@@ -97,19 +60,12 @@ const Transactions = () => {
         friend: friend,
       })
     }
+    console.log(sharedTransactions);
   }
 
-  // let txList = rows.map(function(tx){
-  //   // @ts-ignore
-  //   return {id: tx.ID, 
-  //       // @ts-ignore
-  //           merchant: tx.MerchantName, 
-  //           // @ts-ignore
-  //           amount: tx.Amount,
-  //           // @ts-ignore
-  //           date: tx.Date,
-  //         };
-  // });
+  let txList = rows.map(function(tx){
+    return ConvertTransaction(tx);
+  });
 
   return(
     <Box
@@ -124,7 +80,7 @@ const Transactions = () => {
         overflow: 'auto',
         }}
     >
-      {/* <DataGrid
+      <DataGrid
         rows={ txList }
         columns={columns}
         pageSize={15}
@@ -134,7 +90,7 @@ const Transactions = () => {
             // @ts-ignore
           setSelectedRows(selectedFile);
         }} 
-      /> */}
+      />
       <Button variant="outlined" onClick={printRows}>Split selected</Button>
     </Box>
   )

@@ -19,7 +19,7 @@ type Storage interface {
 	RunMigrations(connectionString string) error
 	CreateTransaction(request api.NewTransactionRequest) error
 	GetTransactions(uid string) ([]api.NewTransactionRequest, error)
-	CreateAccessToken(request api.NewAccessTokenRequest) error
+	CreateAccessToken(request *api.NewAccessTokenRequest) error
 	GetAccessTokens(uid string) ([]string, error)
 }
 
@@ -98,11 +98,10 @@ func (s *storage) GetTransactions(uid string) ([]api.NewTransactionRequest, erro
 }
 
 // Store a new access token for a user
-func (s *storage) CreateAccessToken(request api.NewAccessTokenRequest) error {
+func (s *storage) CreateAccessToken(request *api.NewAccessTokenRequest) error {
 	sqlStatement := `
 		INSERT INTO plaid_items (user_id, access_token, plaid_item_id)
-		VALUES ($1, $2, $3)
-		`
+		VALUES ($1, $2, $3)`
 	_, err := s.db.Exec(sqlStatement, request.UID, request.AccessToken, request.ItemId)
 	if err != nil {
 		return err

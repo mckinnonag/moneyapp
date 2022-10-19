@@ -4,6 +4,7 @@ import (
 	"log"
 	"moneyapp/pkg/api"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +15,11 @@ func (s *Server) CreateLinkToken() gin.HandlerFunc {
 		if err != nil {
 			log.Printf("handler error: %v", err)
 			c.JSON(http.StatusBadRequest, nil)
+			return
+		}
+		if linkToken == "" {
+			log.Printf("returned linkToken is null")
+			c.JSON(http.StatusInternalServerError, nil)
 			return
 		}
 
@@ -40,7 +46,7 @@ func (s *Server) GetAccessToken() gin.HandlerFunc {
 
 		newAccessToken.UID = uid.(string)
 
-		accessToken, itemID, err := s.plaidService.GetAccessToken(c, newAccessToken)
+		accessToken, itemID, err := s.plaidService.GetAccessToken(c, &newAccessToken)
 		if err != nil {
 			log.Printf("service error: %v", err)
 			c.JSON(http.StatusBadRequest, nil)
@@ -63,15 +69,17 @@ func (s *Server) GetPlaidTransactions() gin.HandlerFunc {
 			return
 		}
 
-		var newTransactionRequest api.GetPlaidTransactionsRequest
-		err := c.ShouldBindJSON(&newTransactionRequest)
-		if err != nil {
-			log.Printf("json binding error: %v", err)
-			c.JSON(http.StatusBadRequest, nil)
-			return
-		}
+		const iso8601TimeFormat = "2006-01-02"
+		startDate := time.Now().Add(-365 * 24 * time.Hour).Format(iso8601TimeFormat)
+		endDate := time.Now().Format(iso8601TimeFormat)
 
-		newTransactionRequest.UID = uid.(string)
+		var newTransactionRequest = api.GetPlaidTransactionsRequest{
+			StartDate: c.DefaultQuery("startdate", startDate),
+			EndDate:   c.DefaultQuery("enddate", endDate),
+			Count:     c.DefaultQuery("count", "100"),
+			Offset:    c.DefaultQuery("offset", "0"),
+			UID:       uid.(string),
+		}
 
 		txs, err := s.plaidService.GetTransactions(newTransactionRequest)
 		if err != nil {

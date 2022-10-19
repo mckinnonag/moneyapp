@@ -1,7 +1,5 @@
 package api
 
-import "encoding/json"
-
 type NewTransactionRequest struct {
 	ID              string   `json:"id"`
 	UID             string   `json:"uid"`
@@ -28,8 +26,8 @@ type NewAccessTokenRequest struct {
 
 type GetPlaidTransactionsRequest struct {
 	UID       string
-	StartDate string      `json:"start_date"`
-	EndDate   string      `json:"end_date"`
-	Count     json.Number `json:"count"`
-	Offset    json.Number `json:"offset"`
+	StartDate string `json:"start_date"`
+	EndDate   string `json:"end_date"`
+	Count     string `json:"count"`
+	Offset    string `json:"offset"`
 }

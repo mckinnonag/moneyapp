@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
@@ -16,18 +17,24 @@ import (
 // Authz validates token via Firebase and authorizes users
 func Authz() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		clientToken := c.Request.Header.Get("Authorization")
+		authHeader := c.Request.Header.Get("Authorization")
+		splitHeader := strings.Split(authHeader, " ")
+		if len(splitHeader) != 2 {
+			c.JSON(403, "invalid authorization header format")
+			c.Abort()
+			return
+		}
+		clientToken := splitHeader[1]
 		if clientToken == "" {
-			c.JSON(403, "No Authorization header provided")
+			c.JSON(403, "no Authorization header provided")
 			c.Abort()
 			return
 		}
 
-		bearerToken := c.Request.Header.Get("Authorization")
-		token, err := VerifyIDToken(c, bearerToken)
+		token, err := VerifyIDToken(c, clientToken)
 		if err != nil {
 			if err.Error() == "illegal base64 data at input byte 6; see https://firebase.google.com/docs/auth/admin/verify-id-tokens for details on how to retrieve a valid ID token" {
-				c.JSON(401, "Invalid authorization header.")
+				c.JSON(401, "invalid authorization header.")
 				c.Abort()
 				return
 			} else {
@@ -37,7 +44,14 @@ func Authz() gin.HandlerFunc {
 				return
 			}
 		}
-		c.Set("uid", token.Claims["user_id"])
+
+		uid := token.Claims["user_id"]
+		if uid == nil {
+			c.JSON(403, "invalid authorization claims")
+			c.Abort()
+			return
+		}
+		c.Set("uid", uid)
 		c.Next()
 	}
 }

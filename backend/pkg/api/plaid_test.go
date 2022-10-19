@@ -1,6 +1,3 @@
-//go:build integration
-// +build integration
-
 package api_test
 
 import (
@@ -20,11 +17,11 @@ var ACCESS_TOKEN string
 
 type mockPlaidRepo struct{}
 
-func (m mockPlaidRepo) CreateAccessToken(request api.NewAccessTokenRequest) error {
+func (m *mockPlaidRepo) CreateAccessToken(request api.NewAccessTokenRequest) error {
 	return nil
 }
 
-func (m mockPlaidRepo) GetAccessTokens(string) ([]string, error) {
+func (m *mockPlaidRepo) GetAccessTokens(string) ([]string, error) {
 	var ret []string
 	ret = append(ret, ACCESS_TOKEN)
 	return ret, nil
@@ -122,8 +119,8 @@ func TestGetTransactions(t *testing.T) {
 			UID:       "123",
 			StartDate: startDate,
 			EndDate:   endDate,
-			Count:     100,
-			Offset:    0,
+			Count:     "100",
+			Offset:    "0",
 		}
 
 		txs, err := mockPlaidService.GetTransactions(request)

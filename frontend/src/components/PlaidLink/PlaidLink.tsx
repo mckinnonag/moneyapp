@@ -25,16 +25,17 @@ const PlaidLink = () => {
     async () => {
       await user?.getIdToken()
         .then(async function(jwtToken) {
-          const response = await fetch('http://localhost:8080/api/private/linktoken',
+          const response = await fetch('http://localhost:8080/v1/api/private/plaid/create_link_token',
         {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json', 
-                'Authorization': `${jwtToken}` 
+                'Authorization': `Bearer ${jwtToken}` 
             },
         }
       )
       if (!response.ok) {
+        console.log("create link token response not OK")
         setLinkToken(null);
         return;
       }
@@ -42,12 +43,20 @@ const PlaidLink = () => {
       if (data) {
         if (data.error != null) {
           setLinkToken(null);
+          console.log("error in response data")
           console.log(data.error);
           return;
         }
+        if (data.link_token == null) {
+          console.log("empty link token");
+          return;
+        } 
         setLinkToken(data.link_token);
+        localStorage.setItem("link_token", data.link_token); //to use later for Oauth
+        
+      } else {
+        console.log("no data in response")
       }
-      localStorage.setItem("link_token", data.link_token); //to use later for Oauth
         })
     },
     [user]
@@ -57,11 +66,11 @@ const PlaidLink = () => {
     const init = async () => {
       // do not generate a new token for OAuth redirect; instead
       // setLinkToken from localStorage
-      if (window.location.href.includes("?oauth_state_id=")) {
-        const token = localStorage.getItem("link_token");
-        setLinkToken(token);
-        return;
-      }
+      // if (window.location.href.includes("?oauth_state_id=")) {
+      //   const token = localStorage.getItem("link_token");
+      //   setLinkToken(token);
+      //   return;
+      // }
       generateToken();
     };
     init();
@@ -69,23 +78,25 @@ const PlaidLink = () => {
 
   // Send the generated link public token to the server
   const onSuccess = useCallback(
-    (public_token: string) => {
+    (linkToken: string) => {
       // send public_token to server
       const setToken = async () => {
         user?.getIdToken()
           .then(async function(jwtToken) {
-            const response = await fetch("http://localhost:8080/api/private/accesstoken", {
+            const data = {public_token: linkToken}
+            const response = await fetch("http://localhost:8080/v1/api/private/plaid/set_access_token", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                'Authorization': `${jwtToken}`
+                'Authorization': `Bearer ${jwtToken}`
               },
-              body: `public_token=${public_token}`,
+              body: JSON.stringify(data),
             });
+            console.log(response);
             if (!response.ok) {
               return;
             }
-            const data = await response.json();
+            // const data = await response.json();
             // dispatch({
             //   type: "SET_STATE",
             //   state: {
@@ -99,7 +110,7 @@ const PlaidLink = () => {
       setToken();
       window.history.pushState("", "", "/");
     },
-    []
+    [user, linkToken]
   );
 
   const config: Parameters<typeof usePlaidLink>[0] = {

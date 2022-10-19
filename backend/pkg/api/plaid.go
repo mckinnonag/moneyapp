@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"log"
+	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	plaid "github.com/plaid/plaid-go/plaid"
@@ -41,13 +41,13 @@ var environments = map[string]plaid.Environment{
 // PlaidService contains the methods of the Plaid service
 type PlaidService interface {
 	CreateLinkToken(c *gin.Context) (string, error)
-	GetAccessToken(c *gin.Context, a NewAccessTokenRequest) (string, string, error)
+	GetAccessToken(c *gin.Context, a *NewAccessTokenRequest) (string, string, error)
 	GetTransactions(req GetPlaidTransactionsRequest) ([]plaid.Transaction, error)
 }
 
 // PlaidRepository is what lets our service do db operations without knowing anything about the implementation
 type PlaidRepository interface {
-	CreateAccessToken(NewAccessTokenRequest) error
+	CreateAccessToken(*NewAccessTokenRequest) error
 	GetAccessTokens(string) ([]string, error)
 }
 
@@ -121,7 +121,7 @@ func (p *plaidService) CreateLinkToken(c *gin.Context) (string, error) {
 	}
 
 	request := plaid.NewLinkTokenCreateRequest(
-		"Moneyapp",
+		app_name,
 		"en",
 		countryCodes,
 		user,
@@ -135,13 +135,13 @@ func (p *plaidService) CreateLinkToken(c *gin.Context) (string, error) {
 	linkTokenCreateResp, _, err := client.PlaidApi.LinkTokenCreate(ctx).LinkTokenCreateRequest(*request).Execute()
 
 	if err != nil {
-		return "", plaidError(err)
+		return "", err
 	}
 
 	return linkTokenCreateResp.GetLinkToken(), nil
 }
 
-func (p *plaidService) GetAccessToken(c *gin.Context, a NewAccessTokenRequest) (accessToken, itemID string, err error) {
+func (p *plaidService) GetAccessToken(c *gin.Context, a *NewAccessTokenRequest) (accessToken, itemID string, err error) {
 	publicToken := a.PublicToken
 	if publicToken == "" {
 		err = errors.New("missing public token")
@@ -196,10 +196,6 @@ func CreatePublicToken() (string, error) {
 }
 
 func (p *plaidService) GetTransactions(req GetPlaidTransactionsRequest) ([]plaid.Transaction, error) {
-	const iso8601TimeFormat = "2006-01-02"
-	startDate := time.Now().Add(-365 * 24 * time.Hour).Format(iso8601TimeFormat)
-	endDate := time.Now().Format(iso8601TimeFormat)
-
 	ctx := context.Background()
 
 	accessTokens, err := p.storage.GetAccessTokens(req.UID)
@@ -211,13 +207,21 @@ func (p *plaidService) GetTransactions(req GetPlaidTransactionsRequest) ([]plaid
 	for _, accessToken := range accessTokens {
 		request := plaid.NewTransactionsGetRequest(
 			accessToken,
-			startDate,
-			endDate,
+			req.StartDate,
+			req.EndDate,
 		)
 
+		count, err := strconv.Atoi(req.Count)
+		if err != nil {
+			return nil, err
+		}
+		offset, err := strconv.Atoi(req.Offset)
+		if err != nil {
+			return nil, err
+		}
 		options := plaid.TransactionsGetRequestOptions{
-			Count:  plaid.PtrInt32(100),
-			Offset: plaid.PtrInt32(0),
+			Count:  plaid.PtrInt32(int32(count)),
+			Offset: plaid.PtrInt32(int32(offset)),
 		}
 
 		request.SetOptions(options)

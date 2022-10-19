@@ -17,6 +17,7 @@ func (s *Server) Routes() *gin.Engine {
 			public.GET("/status", s.ApiStatus())
 		}
 		private := v1.Group("/private")
+		private.Use(middleware.Authz())
 		{
 			private.GET("/transactions", s.GetTransactions())
 			private.POST("/transactions", s.CreateTransaction())
@@ -30,7 +31,6 @@ func (s *Server) Routes() *gin.Engine {
 				plaid.GET("transactions", s.GetPlaidTransactions())
 			}
 		}
-		private.Use(middleware.Authz())
 	}
 
 	return router
