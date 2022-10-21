@@ -45,10 +45,11 @@ func dbConnectionString() (string, error) {
 		DATABASE_SSL = "disable"
 	}
 
-	// Initialize DB
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=%s",
-		DATABASE_URL, DATABASE_PORT, DATABASE_USER, DATABASE_PW, DATABASE_NAME, DATABASE_SSL)
+	// Golang-migrate requires format:
+	// dbdriver://username:password@host:port/dbname?param1=true&param2=false
+	psqlInfo := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s", DATABASE_USER, DATABASE_PW, DATABASE_URL,
+		DATABASE_PORT, DATABASE_NAME, DATABASE_SSL)
+
 	return psqlInfo, nil
 }
 
@@ -64,7 +65,7 @@ func connectDB(psqlInfo string) (*sql.DB, error) {
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Fprintf(os.Stderr, "startup error: %s\\n", err)
+		fmt.Fprintf(os.Stderr, "startup error in main.go: %s\n", err)
 		os.Exit(1)
 	}
 }
@@ -90,10 +91,10 @@ func run() error {
 	storage := repository.NewStorage(db)
 
 	// Run database migrations
-	// err = storage.RunMigrations(connectionString)
-	// if err != nil {
-	// 	return err
-	// }
+	err = storage.RunMigrations(connectionString)
+	if err != nil {
+		return err
+	}
 
 	// Create router dependency
 	APP_PORT = os.Getenv("APP_PORT")

@@ -73,15 +73,23 @@ func (s *Server) GetPlaidTransactions() gin.HandlerFunc {
 		startDate := time.Now().Add(-365 * 24 * time.Hour).Format(iso8601TimeFormat)
 		endDate := time.Now().Format(iso8601TimeFormat)
 
-		var newTransactionRequest = api.GetPlaidTransactionsRequest{
-			StartDate: c.DefaultQuery("startdate", startDate),
-			EndDate:   c.DefaultQuery("enddate", endDate),
-			Count:     c.DefaultQuery("count", "100"),
-			Offset:    c.DefaultQuery("offset", "0"),
+		// newTransactionRequest := api.GetPlaidTransactionsRequest{
+		// 	StartDate: c.DefaultQuery("startdate", startDate),
+		// 	EndDate:   c.DefaultQuery("enddate", endDate),
+		// 	Count:     c.DefaultQuery("count", "100"),
+		// 	Offset:    c.DefaultQuery("offset", "0"),
+		// 	UID:       uid.(string),
+		// }
+
+		newTransactionRequest := api.GetPlaidTransactionsRequest{
+			StartDate: startDate,
+			EndDate:   endDate,
+			Count:     "100",
+			Offset:    "0",
 			UID:       uid.(string),
 		}
 
-		txs, err := s.plaidService.GetTransactions(newTransactionRequest)
+		txs, err := s.plaidService.GetPlaidTransactions(c, newTransactionRequest)
 		if err != nil {
 			log.Printf("service error: %v", err)
 			c.JSON(http.StatusBadRequest, nil)

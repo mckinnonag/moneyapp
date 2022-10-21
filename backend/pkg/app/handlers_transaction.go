@@ -1,6 +1,8 @@
 package app
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -22,13 +24,11 @@ func (s *Server) ApiStatus() gin.HandlerFunc {
 	}
 }
 
-func (s *Server) CreateTransaction() gin.HandlerFunc {
+func (s *Server) CreateTransactions() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Content-Type", "application/json")
 
-		var newTransaction api.NewTransactionRequest
-
-		err := c.ShouldBindJSON(&newTransaction)
+		body, err := ioutil.ReadAll(c.Request.Body)
 
 		if err != nil {
 			log.Printf("handler error: %v", err)
@@ -36,7 +36,16 @@ func (s *Server) CreateTransaction() gin.HandlerFunc {
 			return
 		}
 
-		err = s.transactionService.New(c, newTransaction)
+		req := api.NewTransactionsRequest{}
+		err = json.Unmarshal(body, &req)
+
+		if err != nil {
+			log.Printf("handler error: %v", err)
+			c.JSON(http.StatusBadRequest, nil)
+			return
+		}
+
+		err = s.transactionService.New(c, req.Transactions)
 
 		if err != nil {
 			log.Printf("service error: %v", err)

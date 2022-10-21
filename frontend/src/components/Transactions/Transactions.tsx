@@ -11,13 +11,14 @@ const columns = [
   {
     field: 'amount',
     headerName: 'Amount',
-    type: 'number',
+    type: 'currency',
     currencySymbol: 'USD',
     width: 70,
   },
   { field: 'merchant_name', headerName: 'Merchant', width: 300 },
   { field: 'category', headerName: 'Category', width: 300},
   { field: 'date', headerName: 'Date', width: 120},
+  { field: 'pending', headerName: 'Pending?', width: 120},
   { field: 'shared with', headerName: 'Shared with', width: 200},
 ];
 
@@ -69,14 +70,13 @@ const Transactions = () => {
 
   return(
     <Box
-        component="main"
         sx={{
         backgroundColor: (theme) =>
             theme.palette.mode === 'light'
             ? theme.palette.grey[100]
             : theme.palette.grey[900],
         flexGrow: 1,
-        height: '100vh',
+        height: '90vh',
         overflow: 'auto',
         }}
     >
@@ -91,7 +91,7 @@ const Transactions = () => {
           setSelectedRows(selectedFile);
         }} 
       />
-      <Button variant="outlined" onClick={printRows}>Split selected</Button>
+      {/* <Button variant="outlined" onClick={printRows}>Split selected</Button> */}
     </Box>
   )
 };

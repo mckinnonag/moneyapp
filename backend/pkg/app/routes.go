@@ -20,7 +20,7 @@ func (s *Server) Routes() *gin.Engine {
 		private.Use(middleware.Authz())
 		{
 			private.GET("/transactions", s.GetTransactions())
-			private.POST("/transactions", s.CreateTransaction())
+			private.POST("/transactions", s.CreateTransactions())
 			private.GET("/contact", s.GetContact())
 			private.POST("/contact", s.SetContact())
 			private.DELETE("/contact", s.DeleteContact())

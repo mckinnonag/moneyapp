@@ -17,7 +17,7 @@ var ACCESS_TOKEN string
 
 type mockPlaidRepo struct{}
 
-func (m *mockPlaidRepo) CreateAccessToken(request api.NewAccessTokenRequest) error {
+func (m *mockPlaidRepo) CreateAccessToken(request *api.NewAccessTokenRequest) error {
 	return nil
 }
 
@@ -79,7 +79,7 @@ func TestGetAccessToken(t *testing.T) {
 		request := api.NewAccessTokenRequest{
 			PublicToken: publicToken,
 		}
-		accessToken, itemID, err := mockPlaidService.GetAccessToken(c, request)
+		accessToken, itemID, err := mockPlaidService.GetAccessToken(c, &request)
 
 		assert.Nil(t, err)
 
@@ -96,13 +96,13 @@ func TestGetAccessToken(t *testing.T) {
 		c.Set("uid", "123")
 
 		request := api.NewAccessTokenRequest{}
-		_, _, err := mockPlaidService.GetAccessToken(c, request)
+		_, _, err := mockPlaidService.GetAccessToken(c, &request)
 
 		assert.NotNil(t, err)
 	})
 }
 
-func TestGetTransactions(t *testing.T) {
+func TestGetPlaidTransactions(t *testing.T) {
 	mockRepo := mockPlaidRepo{}
 	mockPlaidService := api.NewPlaidService(&mockPlaidConfig, &mockRepo)
 
@@ -123,7 +123,7 @@ func TestGetTransactions(t *testing.T) {
 			Offset:    "0",
 		}
 
-		txs, err := mockPlaidService.GetTransactions(request)
+		txs, err := mockPlaidService.GetPlaidTransactions(c, request)
 		assert.Nil(t, err)
 		assert.Len(t, txs, 100)
 	})

@@ -1,20 +1,24 @@
 package api
 
-type NewTransactionRequest struct {
-	ID              string   `json:"id"`
+type NewTransactionsRequest struct {
+	Transactions []Transaction `json:"transactions"`
+}
+
+type Transaction struct {
+	ID              string   `json:"transaction_id"`
 	UID             string   `json:"uid"`
-	ItemID          string   `json:"itemid"`
+	ItemID          string   `json:"item_id"`
 	Category        []string `json:"category"`
 	Location        string   `json:"location"`
 	Name            string   `json:"name"`
 	Amount          float32  `json:"amount"`
-	IsoCurrencyCode string   `json:"isocurrencycode"`
+	IsoCurrencyCode string   `json:"iso_currency_code"`
 	Date            string   `json:"date"`
 	Pending         bool     `json:"pending"`
-	MerchantName    string   `json:"merchantname"`
-	PaymentChannel  string   `json:"paymentchannel"`
-	SharedWith      string   `json:"sharedwith"`
-	SplitAmount     float32  `json:"splitamount"`
+	MerchantName    string   `json:"merchant_name"`
+	PaymentChannel  string   `json:"payment_channel"`
+	SharedWith      string   `json:"shared_with"`
+	SplitAmount     float32  `json:"split_amount"`
 }
 
 type NewAccessTokenRequest struct {

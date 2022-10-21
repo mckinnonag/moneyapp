@@ -16,21 +16,32 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// This service is used across other app tests as well
 type mockPlaidService struct{}
 
-func init() {
+func newMockServer() *app.Server {
+	var mockPlaid mockPlaidService
+	var mockTx mockTransactionService
+
+	r := gin.New()
 	gin.SetMode(gin.TestMode)
+
+	return app.NewServer(
+		r,
+		&mockTx,
+		&mockPlaid,
+	)
 }
 
-func (m mockPlaidService) CreateLinkToken(c *gin.Context) (string, error) {
+func (m *mockPlaidService) CreateLinkToken(c *gin.Context) (string, error) {
 	return "testLinkToken", nil
 }
 
-func (m mockPlaidService) GetAccessToken(c *gin.Context, a api.NewAccessTokenRequest) (string, string, error) {
+func (m *mockPlaidService) GetAccessToken(c *gin.Context, a *api.NewAccessTokenRequest) (string, string, error) {
 	return "testAccessToken", "testItemID", nil
 }
 
-func (m mockPlaidService) GetTransactions(r api.GetPlaidTransactionsRequest) ([]plaid.Transaction, error) {
+func (m *mockPlaidService) GetPlaidTransactions(c *gin.Context, r api.GetPlaidTransactionsRequest) ([]plaid.Transaction, error) {
 	var ret []plaid.Transaction
 	ret = append(ret, plaid.Transaction{
 		Name:   "Test Transaction",
@@ -39,23 +50,13 @@ func (m mockPlaidService) GetTransactions(r api.GetPlaidTransactionsRequest) ([]
 	return ret, nil
 }
 
-func newMockServer() *app.Server {
-	var mockPlaidService mockPlaidService
-	r := gin.New()
-
-	return app.NewServer(
-		r,
-		nil,
-		mockPlaidService,
-	)
-}
-
 func TestCreateLinkToken(t *testing.T) {
 	mockServer := newMockServer()
 
 	t.Run("Success", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
+		c.Set("uid", "123")
 
 		f := mockServer.CreateLinkToken()
 		f(c)

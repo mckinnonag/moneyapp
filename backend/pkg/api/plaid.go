@@ -42,7 +42,7 @@ var environments = map[string]plaid.Environment{
 type PlaidService interface {
 	CreateLinkToken(c *gin.Context) (string, error)
 	GetAccessToken(c *gin.Context, a *NewAccessTokenRequest) (string, string, error)
-	GetTransactions(req GetPlaidTransactionsRequest) ([]plaid.Transaction, error)
+	GetPlaidTransactions(c *gin.Context, req GetPlaidTransactionsRequest) ([]plaid.Transaction, error)
 }
 
 // PlaidRepository is what lets our service do db operations without knowing anything about the implementation
@@ -195,7 +195,7 @@ func CreatePublicToken() (string, error) {
 	return sandboxPublicTokenResp.GetPublicToken(), nil
 }
 
-func (p *plaidService) GetTransactions(req GetPlaidTransactionsRequest) ([]plaid.Transaction, error) {
+func (p *plaidService) GetPlaidTransactions(c *gin.Context, req GetPlaidTransactionsRequest) ([]plaid.Transaction, error) {
 	ctx := context.Background()
 
 	accessTokens, err := p.storage.GetAccessTokens(req.UID)

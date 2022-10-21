@@ -1,15 +1,25 @@
 interface Transaction {
     id: string,
-    merchant_name: string,
+    uid?: string,
+    item_id: string,
+    category?: string[],
+    location?: string,
+    name?: string,
     amount: number,
-    date: Date,
-    category: string[],
     iso_currency_code: string,
+    date: Date,
+    pending: boolean,
+    merchant_name?: string,
+    payment_channel?: string,
+    shared_with?: string,
+    split_amount?: string,
 };
 
 function ConvertTransaction(o: any) {
     const tx: Transaction = {
         id: o.transaction_id,
+        item_id: o.item_id,
+        pending: o.pending,
         merchant_name: o.merchant_name,
         amount: o.amount,
         date: o.date,

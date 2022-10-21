@@ -12,13 +12,14 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 )
 
 type Storage interface {
 	RunMigrations(connectionString string) error
-	CreateTransaction(request api.NewTransactionRequest) error
-	GetTransactions(uid string) ([]api.NewTransactionRequest, error)
+	CreateTransactions(tx []api.Transaction) error
+	GetTransactions(uid string) ([]api.Transaction, error)
 	CreateAccessToken(request *api.NewAccessTokenRequest) error
 	GetAccessTokens(uid string) ([]string, error)
 }
@@ -38,12 +39,14 @@ func (s *storage) RunMigrations(connectionString string) error {
 	if connectionString == "" {
 		return errors.New("repository: the connString was empty")
 	}
+
 	// get base path
 	_, b, _, _ := runtime.Caller(0)
 	basePath := filepath.Join(filepath.Dir(b), "../..")
 
 	migrationsPath := filepath.Join("file://", basePath, "/pkg/repository/migrations/")
 
+	fmt.Println(connectionString)
 	m, err := migrate.New(migrationsPath, connectionString)
 
 	if err != nil {
@@ -52,39 +55,43 @@ func (s *storage) RunMigrations(connectionString string) error {
 
 	err = m.Up()
 
-	switch err {
-	case errors.New("no change"):
+	if err == migrate.ErrNoChange {
 		return nil
 	}
 
-	return nil
-}
-
-// Helper function. Accepts 3 char currency code; returns ID in database
-func (s *storage) getCurrencyCode(code string) (currency_id string, err error) {
-	sqlStatement := `SELECT currency_id, code FROM users WHERE code=$1;`
-	row := s.db.QueryRow(sqlStatement, code)
-	switch err = row.Scan(&currency_id, &code); err {
-	case sql.ErrNoRows:
-		return "", errors.New("code does not exist")
-	case nil:
-		return currency_id, nil
-	default:
-		return "", err
-	}
+	return err
 }
 
 // Create a new transaction
-func (s *storage) CreateTransaction(request api.NewTransactionRequest) error {
-	iso_currency_code, err := s.getCurrencyCode(request.IsoCurrencyCode)
+func (s *storage) CreateTransactions(txs []api.Transaction) error {
+	txn, err := s.db.Begin()
 	if err != nil {
 		return err
 	}
-	sqlStatement := `
-		INSERT INTO transactions (plaid_id, plaid_item_id, user_id, category, location, tx_name, amount, iso_currency_code, tx_date, pending, merchant_name, payment_channel)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-		`
-	_, err = s.db.Exec(sqlStatement, request.ID, request.ItemID, request.UID, request.Category, request.Location, request.Name, request.Amount, iso_currency_code, request.Date, request.Pending, request.MerchantName, request.PaymentChannel)
+
+	stmt, err := txn.Prepare(pq.CopyIn("transactions", "plaid_id", "plaid_item_id", "user_id", "category", "location", "tx_name", "amount", "iso_currency_code", "tx_date", "pending", "merchant_name", "payment_channel"))
+	if err != nil {
+		return err
+	}
+
+	for _, t := range txs {
+		_, err = stmt.Exec(t.ID, t.ItemID, t.UID, t.Category, t.Location, t.Name, t.Amount, t.IsoCurrencyCode, t.Date, t.Pending, t.MerchantName, t.PaymentChannel)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return err
+	}
+
+	err = txn.Commit()
 	if err != nil {
 		return err
 	}
@@ -93,7 +100,7 @@ func (s *storage) CreateTransaction(request api.NewTransactionRequest) error {
 }
 
 // Get all of a user's transactions
-func (s *storage) GetTransactions(uid string) ([]api.NewTransactionRequest, error) {
+func (s *storage) GetTransactions(uid string) ([]api.Transaction, error) {
 	return nil, errors.New("not implemented")
 }
 
