@@ -1,7 +1,6 @@
 package app
 
 import (
-	"log"
 	"moneyapp/pkg/api"
 	"net/http"
 	"time"
@@ -13,12 +12,12 @@ func (s *Server) CreateLinkToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		linkToken, err := s.plaidService.CreateLinkToken(c)
 		if err != nil {
-			log.Printf("handler error: %v", err)
+			s.l.Error("handler error: %v", err.Error())
 			c.JSON(http.StatusBadRequest, nil)
 			return
 		}
 		if linkToken == "" {
-			log.Printf("returned linkToken is null")
+			s.l.Error("returned linkToken is null")
 			c.JSON(http.StatusInternalServerError, nil)
 			return
 		}
@@ -31,7 +30,7 @@ func (s *Server) GetAccessToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		uid, exists := c.Get("uid")
 		if !exists {
-			log.Printf("request context does not contain user id claim")
+			s.l.Warn("request context does not contain user id claim")
 			c.JSON(http.StatusUnauthorized, nil)
 			return
 		}
@@ -39,7 +38,7 @@ func (s *Server) GetAccessToken() gin.HandlerFunc {
 		var newAccessToken api.NewAccessTokenRequest
 		err := c.ShouldBindJSON(&newAccessToken)
 		if err != nil {
-			log.Printf("handler error: %v", err)
+			s.l.Error("handler error: %v", err.Error())
 			c.JSON(http.StatusBadRequest, nil)
 			return
 		}
@@ -48,7 +47,7 @@ func (s *Server) GetAccessToken() gin.HandlerFunc {
 
 		accessToken, itemID, err := s.plaidService.GetAccessToken(c, &newAccessToken)
 		if err != nil {
-			log.Printf("service error: %v", err)
+			s.l.Error("service error: %v", err.Error())
 			c.JSON(http.StatusBadRequest, nil)
 			return
 		}
@@ -64,7 +63,7 @@ func (s *Server) GetPlaidTransactions() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		uid, exists := c.Get("uid")
 		if !exists {
-			log.Printf("request context does not contain user id claim")
+			s.l.Warn("request context does not contain user id claim")
 			c.JSON(http.StatusUnauthorized, nil)
 			return
 		}
@@ -91,7 +90,7 @@ func (s *Server) GetPlaidTransactions() gin.HandlerFunc {
 
 		txs, err := s.plaidService.GetPlaidTransactions(c, newTransactionRequest)
 		if err != nil {
-			log.Printf("service error: %v", err)
+			s.l.Error("service error: %v", err.Error())
 			c.JSON(http.StatusBadRequest, nil)
 			return
 		}

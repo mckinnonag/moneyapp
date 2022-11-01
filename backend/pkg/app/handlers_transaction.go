@@ -2,8 +2,7 @@ package app
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"log"
+	"io"
 	"net/http"
 
 	"moneyapp/pkg/api"
@@ -11,27 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (s *Server) ApiStatus() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Header("Content-Type", "application/json")
-
-		response := map[string]string{
-			"status": "success",
-			"data":   "API running smoothly",
-		}
-
-		c.JSON(http.StatusOK, response)
-	}
-}
-
 func (s *Server) CreateTransactions() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Content-Type", "application/json")
 
-		body, err := ioutil.ReadAll(c.Request.Body)
+		body, err := io.ReadAll(c.Request.Body)
 
 		if err != nil {
-			log.Printf("handler error: %v", err)
+			s.l.Error("handler error: %v", err.Error())
 			c.JSON(http.StatusBadRequest, nil)
 			return
 		}
@@ -40,7 +26,7 @@ func (s *Server) CreateTransactions() gin.HandlerFunc {
 		err = json.Unmarshal(body, &req)
 
 		if err != nil {
-			log.Printf("handler error: %v", err)
+			s.l.Error("handler error: %v", err.Error())
 			c.JSON(http.StatusBadRequest, nil)
 			return
 		}
@@ -48,7 +34,7 @@ func (s *Server) CreateTransactions() gin.HandlerFunc {
 		err = s.transactionService.New(c, req.Transactions)
 
 		if err != nil {
-			log.Printf("service error: %v", err)
+			s.l.Error("service error: %v", err.Error())
 			c.JSON(http.StatusInternalServerError, nil)
 			return
 		}
@@ -68,7 +54,7 @@ func (s *Server) GetTransactions() gin.HandlerFunc {
 
 		txs, err := s.transactionService.Get(c)
 		if err != nil {
-			log.Printf("service error: %v", err)
+			s.l.Error("service error: %v", err.Error())
 			c.JSON(http.StatusBadRequest, nil)
 			return
 		}

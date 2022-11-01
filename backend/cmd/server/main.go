@@ -9,6 +9,7 @@ import (
 
 	"moneyapp/pkg/api"
 	"moneyapp/pkg/app"
+	"moneyapp/pkg/logger"
 	"moneyapp/pkg/repository"
 
 	"github.com/gin-contrib/cors"
@@ -71,19 +72,24 @@ func main() {
 }
 
 func run() error {
+	l := logger.New("moneyapp", "v1.0.0", 1)
+
 	// Load environment variables
 	err := godotenv.Load()
 	if err != nil {
+		l.Fatal(err.Error())
 		return err
 	}
 
 	// Connect DB
 	connectionString, err := dbConnectionString()
 	if err != nil {
+		l.Fatal(err.Error())
 		return err
 	}
 	db, err := connectDB(connectionString)
 	if err != nil {
+		l.Fatal(err.Error())
 		return err
 	}
 
@@ -93,6 +99,7 @@ func run() error {
 	// Run database migrations
 	err = storage.RunMigrations(connectionString)
 	if err != nil {
+		l.Fatal(err.Error())
 		return err
 	}
 
@@ -110,8 +117,6 @@ func run() error {
 	corsConfig.AddAllowHeaders("Authorization")
 	r.Use(cors.New(corsConfig))
 
-	transactionService := api.NewTransactionService(storage)
-
 	plaidConfig := &api.PlaidConfig{
 		APP_NAME:            os.Getenv("APP_NAME"),
 		PLAID_CLIENT_ID:     os.Getenv("PLAID_CLIENT_ID"),
@@ -122,12 +127,14 @@ func run() error {
 		PLAID_REDIRECT_URI:  os.Getenv("PLAID_REDIRECT_URI"),
 	}
 	plaidService := api.NewPlaidService(plaidConfig, storage)
+	transactionService := api.NewTransactionService(storage)
 
-	server := app.NewServer(r, transactionService, plaidService)
+	server := app.NewServer(r, l, transactionService, plaidService)
 
 	// Start the server
 	err = server.Run(APP_PORT)
 	if err != nil {
+		l.Fatal(err.Error())
 		return err
 	}
 
